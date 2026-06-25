@@ -97,9 +97,15 @@
     .sidebar{display:none!important;}
     .sidebar-overlay{display:none!important;}
     .app-wrap{display:block!important;}
-    main{padding:16px!important;}
-    .kpi-card{break-inside:avoid;}
+    main{padding:20px 24px!important;}
     body{background:#fff!important;}
+    /* Éviter les coupures à l'intérieur des blocs */
+    .kpi-card{break-inside:avoid;}
+    .alloc-grid > div{break-inside:avoid;}
+    .bottom-grid > div{break-inside:avoid;}
+    .kpi-grid{break-inside:avoid;}
+    .synth-header{break-inside:avoid;}
+    .detail-geo-grid > div{break-inside:avoid;}
     [data-theme="dark"]{
       --bg:#fff;--surface:#fff;--surface-2:#f5f5f5;--surface-3:#ebebeb;
       --ink:#000;--ink-2:#333;--ink-3:#666;--line:#ccc;--line-2:#e5e5e5;
@@ -270,8 +276,13 @@
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;">{{ row.rendementStr }}</span>
                     <!-- Pourcentage éditable -->
                     <span style="display:inline-flex;align-items:center;">
-                      <input type="number" value="{{ row.weight }}" min="0" max="60" onInput="{{ row.onWeightInput }}" style="width:34px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;-moz-appearance:textfield;" />
+                      <input type="text" value="{{ row.weightInput }}" onFocus="{{ row.onPctFocus }}" onInput="{{ row.onWeightInput }}" onBlur="{{ row.onPctBlur }}" onKeyDown="{{ row.onPctKeyDown }}" style="width:38px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
                       <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);">%</span>
+                    </span>
+                    <!-- € input synchronisé -->
+                    <span style="display:inline-flex;align-items:center;margin-right:2px;">
+                      <input type="text" value="{{ row.amountEurStr }}" onFocus="{{ row.onEurFocus }}" onInput="{{ row.onAmountInput }}" onBlur="{{ row.onEurBlur }}" onKeyDown="{{ row.onEurKeyDown }}" style="width:68px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);">€</span>
                     </span>
                     <!-- Bouton masquer -->
                     <button class="hide-scpi-btn" onClick="{{ row.onHide }}" title="Masquer cette SCPI" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:5px;background:transparent;cursor:pointer;color:var(--ink-3);flex:none;padding:0;transition:color .15s,background .15s;">
@@ -282,16 +293,21 @@
                 </div>
               </sc-for>
 
-              <!-- SCPIs masquées -->
-              <div style="display:{{ hiddenSectionDisplay }};flex-direction:column;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);">
-                <div style="font-size:10px;color:var(--ink-3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">SCPIs masquées</div>
-                <sc-for list="{{ hiddenRows }}" as="row" hint-placeholder-count="1">
-                  <div style="display:flex;align-items:center;gap:9px;padding:5px 0;">
-                    <span style="width:7px;height:7px;border-radius:50%;flex:none;background:{{ row.color }};opacity:.45;"></span>
-                    <span style="flex:1;font-size:12.5px;color:var(--ink-3);">{{ row.name }}</span>
-                    <button onClick="{{ row.onShow }}" style="font-size:11.5px;color:var(--accent);background:var(--accent-soft);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;font-weight:600;transition:background .15s;">+ Afficher</button>
-                  </div>
-                </sc-for>
+              <!-- Bouton Ajouter d'autres SCPI - caché à l'impression -->
+              <div class="no-print" style="display:{{ hiddenSectionDisplay }};flex-direction:column;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);">
+                <button onClick="{{ toggleHiddenPanel }}" class="btn-ghost" style="display:flex;align-items:center;gap:8px;width:fit-content;padding:7px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink-2);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:border-color .15s,color .15s;">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><line x1="7" y1="4" x2="7" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                  {{ addMoreLabel }}
+                </button>
+                <div style="display:{{ hiddenPanelDisplay }};flex-direction:column;margin-top:10px;">
+                  <sc-for list="{{ hiddenRows }}" as="row" hint-placeholder-count="1">
+                    <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--line-2);">
+                      <span style="width:7px;height:7px;border-radius:50%;flex:none;background:{{ row.color }};opacity:.55;"></span>
+                      <span style="flex:1;font-size:12.5px;color:var(--ink-3);">{{ row.name }}</span>
+                      <button onClick="{{ row.onShow }}" style="font-size:11.5px;color:var(--accent);background:var(--accent-soft);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;font-weight:600;transition:background .15s;">Réintégrer</button>
+                    </div>
+                  </sc-for>
+                </div>
               </div>
 
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;">
@@ -306,11 +322,11 @@
             <!-- Donut SVG + légende -->
             <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);">
               <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 22px;">Répartition</h2>
-              <div style="display:flex;align-items:center;gap:26px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
 
-                <!-- SVG Donut : 6 cercles nommés (seg0…seg5) pour éviter sc-for dans SVG -->
-                <div style="position:relative;width:340px;height:340px;flex:none;">
-                  <svg width="340" height="340" viewBox="0 0 100 100">
+                <!-- SVG Donut centré -->
+                <div style="position:relative;width:220px;height:220px;flex:none;">
+                  <svg width="220" height="220" viewBox="0 0 100 100">
                     <!-- Track -->
                     <circle cx="50" cy="50" r="20" fill="none" stroke="var(--surface-3)" stroke-width="8"/>
                     <!-- Segments SCPI 0→5 -->
@@ -338,23 +354,22 @@
                       stroke="{{ seg5.color }}" stroke-width="8"
                       stroke-dasharray="{{ seg5.da }}" stroke-dashoffset="{{ seg5.do }}"
                       transform="rotate(-90 50 50)"/>
-                    <!-- Trou central (r = 20 - stroke/2 = 16, on couvre jusqu'à 16.5 pour éviter l'effet de bord) -->
                     <circle cx="50" cy="50" r="16.5" fill="var(--surface)"/>
                   </svg>
                   <!-- Label centré -->
                   <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                    <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
-                    <div style="font-size:10px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:8px;text-align:center;line-height:1.5;font-weight:600;">Rendement<br>moyen</div>
+                    <div style="font-family:'Spectral',serif;font-size:16px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
+                    <div style="font-size:8.5px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:5px;text-align:center;line-height:1.5;font-weight:600;">Rendement<br>moyen</div>
                   </div>
                 </div>
 
-                <!-- Légende -->
-                <div style="flex:1;min-width:0;">
+                <!-- Légende en grille 2 colonnes -->
+                <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;">
                   <sc-for list="{{ visibleRows }}" as="row" hint-placeholder-count="6">
-                    <div style="display:flex;align-items:center;gap:9px;padding:5.5px 0;">
-                      <span style="width:8px;height:8px;border-radius:2px;flex:none;background:{{ row.color }};"></span>
-                      <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2);">{{ row.name }}</span>
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;">{{ row.pctStr }}</span>
+                    <div style="display:flex;align-items:center;gap:7px;padding:4px 0;">
+                      <span style="width:7px;height:7px;border-radius:2px;flex:none;background:{{ row.color }};"></span>
+                      <span style="flex:1;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2);">{{ row.name }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;">{{ row.pctStr }}</span>
                     </div>
                   </sc-for>
                 </div>
@@ -380,20 +395,26 @@
             <div style="background:linear-gradient(148deg,#0a2540 0%,#163d6a 100%);border-radius:16px;padding:28px;color:#fff;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;">
               <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
               <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;opacity:.62;font-weight:700;margin-bottom:16px;">Revenu estimé</div>
-              <div style="font-family:'Spectral',serif;font-size:46px;font-weight:500;line-height:1;letter-spacing:-0.02em;">{{ incomeAnnualStr }}</div>
-              <div style="font-size:13px;opacity:.68;margin-top:7px;">/ an &nbsp;·&nbsp; {{ incomeMonthlyStr }} / mois</div>
+              <div style="font-family:'Spectral',serif;font-size:52px;font-weight:500;line-height:1;letter-spacing:-0.02em;">{{ incomeAnnualStr }}</div>
+              <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;opacity:.55;margin-top:6px;font-weight:700;">Par an</div>
+              <div style="font-size:13px;opacity:.5;margin-top:3px;">soit {{ incomeMonthlyStr }} / mois</div>
               <div style="display:{{ pessimisticDiffDisplay }};font-size:12px;color:#e07a5f;margin-top:8px;align-items:center;gap:5px;">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3 3 3-3" stroke="#e07a5f" stroke-width="1.4" stroke-linecap="round"/></svg>
                 {{ pessimisticDiff }} vs scénario de base
               </div>
-              <div style="height:1px;background:rgba(255,255,255,.13);margin:22px 0 18px;"></div>
-              <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.78;margin-bottom:9px;">
+              <div style="height:1px;background:rgba(255,255,255,.13);margin:16px 0 13px;"></div>
+              <div style="font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;opacity:.5;font-weight:700;margin-bottom:9px;">Détail par SCPI</div>
+              <sc-for list="{{ incomeBreakdown }}" as="ib" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+                  <span style="width:5px;height:5px;border-radius:50%;flex:none;background:{{ ib.color }};opacity:.85;"></span>
+                  <span style="flex:1;font-size:11px;opacity:.72;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ ib.name }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.9;">{{ ib.incomeStr }}</span>
+                </div>
+              </sc-for>
+              <div style="height:1px;background:rgba(255,255,255,.13);margin:10px 0 10px;"></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.6;">
                 <span>Capital investi</span>
                 <span style="font-family:'IBM Plex Mono',monospace;">{{ amountStr }}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.78;">
-                <span>Rendement pondéré</span>
-                <span style="font-family:'IBM Plex Mono',monospace;">{{ avgRendementStr }}</span>
               </div>
             </div>
 
@@ -428,6 +449,61 @@
                 </div>
               </sc-for>
             </div>
+          </div>
+          <!-- Patrimoine historique -->
+          <div style="margin-top:28px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+              <div>
+                <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 4px;">Patrimoine historique</h2>
+                <p style="font-size:12.5px;color:var(--ink-3);margin:0;">SCPI déjà détenues - saisir pour obtenir une vision consolidée</p>
+              </div>
+              <button onClick="{{ addLegacy }}" class="no-print" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px dashed var(--line);border-radius:9px;background:transparent;color:var(--ink-2);cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;transition:border-color .15s,color .15s;">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Ajouter une ligne
+              </button>
+            </div>
+            <sc-if value="{{ hasLegacy }}">
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:18px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 150px 36px;padding:10px 20px;background:var(--surface-2);border-bottom:1px solid var(--line);">
+                  <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">SCPI</span>
+                  <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">Société de gestion</span>
+                  <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:right;">Montant investi</span>
+                  <span></span>
+                </div>
+                <sc-for list="{{ legacyRows }}" as="leg" hint-placeholder-count="2">
+                  <div style="display:grid;grid-template-columns:1fr 1fr 150px 36px;padding:11px 20px;border-bottom:1px solid var(--line-2);align-items:center;">
+                    <input type="text" value="{{ leg.name }}" placeholder="ex : Immorente" onInput="{{ leg.onNameInput }}" style="font-size:13px;color:var(--ink);border:none;background:transparent;outline:none;font-family:inherit;width:100%;padding-right:12px;" />
+                    <input type="text" value="{{ leg.manager }}" placeholder="ex : Sofidy" onInput="{{ leg.onManagerInput }}" style="font-size:13px;color:var(--ink-2);border:none;background:transparent;outline:none;font-family:inherit;width:100%;padding-right:12px;" />
+                    <input type="number" value="{{ leg.amount }}" placeholder="100000" onInput="{{ leg.onAmountInput }}" style="font-size:13px;color:var(--ink);border:none;background:transparent;outline:none;font-family:'IBM Plex Mono',monospace;width:100%;text-align:right;-moz-appearance:textfield;" />
+                    <button onClick="{{ leg.onRemove }}" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:6px;background:transparent;cursor:pointer;color:var(--ink-3);margin-left:8px;">
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="1" y1="1" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="1" x2="1" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </button>
+                  </div>
+                </sc-for>
+              </div>
+              <!-- Vision consolidée -->
+              <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow-sm);">
+                <h3 style="font-family:'Spectral',serif;font-size:17px;font-weight:500;margin:0 0 16px;">Vision patrimoniale consolidée</h3>
+                <div style="display:flex;height:18px;border-radius:9px;overflow:hidden;margin-bottom:18px;">
+                  <div style="width:{{ consolidatedNewPct }}%;background:var(--accent);transition:width .5s ease;min-width:4px;"></div>
+                  <div style="flex:1;background:var(--surface-3);"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                  <div style="text-align:center;padding:16px;background:var(--surface-2);border-radius:12px;">
+                    <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Nouvelle allocation</div>
+                    <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--accent);">{{ amountStr }}</div>
+                  </div>
+                  <div style="text-align:center;padding:16px;background:var(--surface-2);border-radius:12px;">
+                    <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Patrimoine historique</div>
+                    <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--ink);">{{ legacyTotalStr }}</div>
+                  </div>
+                  <div style="text-align:center;padding:16px;background:var(--accent-soft);border-radius:12px;">
+                    <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px;">Total consolidé</div>
+                    <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--accent);">{{ grandTotalStr }}</div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
           </div>
 
         </div>
@@ -466,6 +542,13 @@
               <div style="background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:19px 20px;box-shadow:var(--shadow-sm);">
                 <div style="font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">{{ m.label }}</div>
                 <div style="font-family:'Spectral',serif;font-size:26px;font-weight:500;margin-top:10px;line-height:1.05;color:{{ m.color }};">{{ m.value }}</div>
+                <sc-if value="{{ m.sriDots }}">
+                  <div style="display:flex;gap:4px;margin-top:8px;">
+                    <sc-for list="{{ m.sriDots }}" as="dot" hint-placeholder-count="7">
+                      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:{{ dot.col }};"></span>
+                    </sc-for>
+                  </div>
+                </sc-if>
               </div>
             </sc-for>
           </div>
@@ -518,6 +601,35 @@
             </sc-for>
           </div>
 
+          <!-- DIC/PRIIPS -->
+          <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow-sm);margin-top:22px;">
+            <h3 style="font-family:'Spectral',serif;font-size:17px;font-weight:500;margin:0 0 3px;">Frais (DIC/PRIIPS)</h3>
+            <p style="font-size:12px;color:var(--ink-3);margin:0 0 20px;">Source : Document d’Informations Clés officiel</p>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+              <div style="background:var(--surface-2);border-radius:12px;padding:16px 18px;">
+                <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Frais d’entrée</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--ink);">{{ d.costs.entreeStr }}</div>
+              </div>
+              <div style="background:var(--surface-2);border-radius:12px;padding:16px 18px;">
+                <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Frais de sortie</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--ink);">{{ d.costs.sortieStr }}</div>
+                <sc-if value="{{ d.costs.sortieNote }}"><div style="font-size:10.5px;color:var(--ink-3);margin-top:5px;line-height:1.4;">{{ d.costs.sortieNote }}</div></sc-if>
+              </div>
+              <div style="background:var(--surface-2);border-radius:12px;padding:16px 18px;">
+                <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Gestion annuelle</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--ink);">{{ d.costs.gestionStr }}</div>
+              </div>
+              <div style="background:var(--surface-2);border-radius:12px;padding:16px 18px;">
+                <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Frais de transaction</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--ink);">{{ d.costs.transactionStr }}</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;padding:12px 16px;background:var(--surface-2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12.5px;color:var(--ink-2);font-weight:600;">Coût total annuel (gestion + transactions)</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:var(--ink);">{{ d.costs.annuelStr }}</span>
+            </div>
+          </div>
+
         </div>
       </sc-if>
 
@@ -530,6 +642,7 @@ const SCPI = [
   {
     id:'alta', name:'Alta Convictions', manager:'Altarea IM', color:'#2f6fed',
     rendement:6.57, pga:7.55, tof:96.00, decote:-6.89, ltv:14.00, walb:'~10 ans (baux fermes)', ran:'0,45 € / part', prix:308, vr:330.81,
+    sri:3, costs:{entree:8.45,sortie:0,sortieNote:null,gestion:1.46,transaction:2.84},
     tagline:'Commerce de proximité et pivot stratégique vers la logistique, avec une décote protectrice de près de 7 %.',
     geo:[{name:'France - Province',pct:85},{name:'Espagne',pct:15}],
     sectors:[{name:'Commerce de proximité',pct:43},{name:'Retail parks',pct:25},{name:'Logistique',pct:23},{name:'Locaux d’activité',pct:9}],
@@ -544,6 +657,7 @@ const SCPI = [
   {
     id:'activ', name:'ActivImmo', manager:'Alderan', color:'#1f9e8f',
     rendement:5.49, pga:5.49, tof:93.10, decote:-1.07, ltv:0.79, walb:'3,9 ans (WALT 6,3)', ran:'~770 K€', prix:610, vr:616.58,
+    sri:3, costs:{entree:10.60,sortie:0,sortieNote:null,gestion:0.71,transaction:2.39},
     tagline:'Le « pure player » de la logistique et des locaux d’activité, un fonds extrêmement désendetté.',
     geo:[{name:'France - Province',pct:78.7},{name:'Espagne',pct:13.5},{name:'Italie',pct:4.1},{name:'Pays-Bas',pct:1.5},{name:'Autres (Europe)',pct:2.2}],
     sectors:[{name:'Logistique & locaux d’activité',pct:100}],
@@ -558,6 +672,7 @@ const SCPI = [
   {
     id:'coeur', name:'Cœur de Régions', manager:'Sogenial', color:'#6f8fd0',
     rendement:6.20, pga:6.20, tof:96.19, decote:-2.90, ltv:12.83, walb:'195 locataires / 92 biens', ran:'1,28 M€', prix:664, vr:683.82,
+    sri:3, costs:{entree:10.00,sortie:0,sortieNote:null,gestion:0.97,transaction:2.25},
     tagline:'SCPI 100 % française et fortement régionalisée, avec une dilution massive du risque locatif.',
     geo:[{name:'France - Province',pct:86.1},{name:'France - Île-de-France',pct:13.9}],
     sectors:[{name:'Bureaux en régions',pct:47},{name:'Commerces',pct:32},{name:'Logistique / activités',pct:21}],
@@ -572,6 +687,7 @@ const SCPI = [
   {
     id:'life', name:'Cristal Life', manager:'Inter Gestion REIM', color:'#c79a2a',
     rendement:6.54, pga:7.51, tof:99.83, decote:-8.24, ltv:1.92, walb:'8,2 ans', ran:'1,03 M€', prix:208, vr:226.69,
+    sri:3, costs:{entree:12.00,sortie:0,sortieNote:null,gestion:1.01,transaction:0.46},
     tagline:'Les « besoins fondamentaux » (santé, commerce essentiel) et la SCPI la plus décotée de l’allocation.',
     geo:[{name:'France - Province',pct:60},{name:'Espagne',pct:18.8},{name:'Irlande',pct:9.6},{name:'Pays-Bas & autres',pct:11.6}],
     sectors:[{name:'Commerce essentiel',pct:31},{name:'Bureaux',pct:27},{name:'Santé',pct:24},{name:'Hôtellerie',pct:14},{name:'Autres',pct:4}],
@@ -586,6 +702,7 @@ const SCPI = [
   {
     id:'rente', name:'Cristal Rente', manager:'Inter Gestion REIM', color:'#8c6fb3',
     rendement:5.00, pga:5.00, tof:99.09, decote:-5.06, ltv:13.48, walb:'Baux longs (grande distribution)', ran:'1,33 M€', prix:255.68, vr:269.32,
+    sri:3, costs:{entree:12.00,sortie:0,sortieNote:null,gestion:1.12,transaction:0.61},
     tagline:'Les grandes enseignes et le commerce alimentaire, sécurisés par des « sale & leaseback ».',
     geo:[{name:'France - Province',pct:84.7},{name:'Espagne',pct:8},{name:'Pays-Bas',pct:4},{name:'Irlande',pct:3.3}],
     sectors:[{name:'Commerce alimentaire',pct:48.5},{name:'Bricolage / jardinerie',pct:28.2},{name:'Restauration',pct:13.3},{name:'Autres',pct:10}],
@@ -600,6 +717,7 @@ const SCPI = [
   {
     id:'sofi', name:'Sofidynamic', manager:'Sofidy', color:'#cf6a47',
     rendement:9.04, pga:14.04, tof:97.48, decote:-6.46, ltv:19.90, walb:'n.c. (fonds récent)', ran:'14,72 € / part', prix:315, vr:336.75,
+    sri:4, costs:{entree:2.40,sortie:6.00,sortieNote:'si sortie avant 8 ans (sinon 0 %)',gestion:1.05,transaction:5.34},
     tagline:'Le moteur de rendement « high yield » de l’allocation, avec un TD brut de plus de 9 %.',
     geo:[{name:'Pays-Bas',pct:46.6},{name:'France - Province',pct:53.4}],
     sectors:[{name:'Commerces (périphérie & urbain)',pct:100}],
@@ -639,8 +757,18 @@ class Component extends DCLogic {
     weights: {...DEFAULT_WEIGHTS},
     pessimistic: false,
     sidebarOpen: false,
-    hiddenScpis: {}
+    hiddenScpis: {},
+    showHiddenPanel: false,
+    legacy: []
   };
+
+  // ── Buffer d'édition (non-réactif — hors state) ───────────────────────────
+  // _activeField : 'scpiId-pct' | 'scpiId-eur' | null
+  // _localValue  : chaîne brute saisie par l'utilisateur, sans formatage
+  // Principe : onInput ne fait QUE mettre à jour ce buffer.
+  //            Le state global (poids/montant) est mis à jour uniquement à onBlur / Enter.
+  _activeField = null;
+  _localValue  = '';
 
   fmtPct(n, d){ if(d===undefined)d=2; return n.toFixed(d).replace('.',',')+' %'; }
   fmtEur(n){ return Math.round(n).toLocaleString('fr-FR')+' €'; }
@@ -666,6 +794,19 @@ class Component extends DCLogic {
   closeSidebar       = () => this.setState({sidebarOpen:false});
   hideScpi           = (id) => this.setState(s=>({hiddenScpis:{...s.hiddenScpis,[id]:true}}));
   showScpi           = (id) => this.setState(s=>{ const h={...s.hiddenScpis}; delete h[id]; return {hiddenScpis:h}; });
+  toggleHiddenPanel  = () => this.setState(s=>({showHiddenPanel:!s.showHiddenPanel}));
+  setAmountEur = (id, eurVal) => {
+    const st = this.state;
+    const amount = st.amount == null ? (this.props.defaultAmount ?? 100000) : st.amount;
+    if(!amount) return;
+    const pct = Math.max(0, Math.min(60, (eurVal / amount) * 100));
+    this.setWeight(id, Math.round(pct * 100) / 100);
+  };
+  addLegacy    = () => this.setState(s=>({legacy:[...s.legacy,{name:'',manager:'',amount:''}]}));
+  removeLegacy = (i) => this.setState(s=>({legacy:s.legacy.filter((_,j)=>j!==i)}));
+  updateLegacy = (i,field,val) => this.setState(s=>{
+    const legacy=[...s.legacy]; legacy[i]={...legacy[i],[field]:val}; return {legacy};
+  });
 
   renderVals(){
     const st = this.state;
@@ -699,10 +840,73 @@ class Component extends DCLogic {
         navBg: active   ? 'var(--accent-soft)' : 'transparent',
         navFg: active   ? 'var(--accent)'      : (isHidden ? 'var(--ink-3)' : 'var(--ink-2)'),
         onInput:       (e) => this.setWeight(s.id, parseInt(e.target.value, 10)),
-        onWeightInput: (e) => { const v=parseFloat(e.target.value); if(!isNaN(v)) this.setWeight(s.id, Math.max(0,Math.min(60,v))); },
         onSelect:      ()  => this.selectScpi(s.id),
         onHide:        ()  => this.hideScpi(s.id),
-        onShow:        ()  => this.showScpi(s.id)
+        onShow:        ()  => this.showScpi(s.id),
+        amountEur: total > 0 ? Math.round(amount * norm(s.id)) : 0,
+
+        // ── Valeurs affichées : buffer local si le champ est actif, formaté sinon ──
+        weightInput:  this._activeField === s.id+'-pct'
+          ? this._localValue
+          : (weight % 1 === 0 ? String(weight) : weight.toFixed(2).replace('.',',')),
+        amountEurStr: this._activeField === s.id+'-eur'
+          ? this._localValue
+          : (total > 0 ? fmtAmt(Math.round(amount * norm(s.id))) : '0'),
+
+        // ── Handlers champ % ──────────────────────────────────────────────────
+        // Focus : initialise le buffer avec la valeur brute, sélectionne tout
+        onPctFocus: (e) => {
+          const raw = weight % 1 === 0 ? String(weight) : weight.toFixed(2).replace('.',',');
+          this._activeField = s.id+'-pct';
+          this._localValue  = raw;
+          e.target.value    = raw;            // enlève le formatage éventuel
+          setTimeout(() => e.target.select(), 0);
+        },
+        // Input : buffer + setState temps réel. weightInput retourne _localValue → DCLogic
+        // écrit la même valeur que le DOM → curseur stable.
+        // Le else force un re-render même sur valeur vide/invalide pour que DCLogic
+        // applique weightInput="" et ne restaure pas l'ancien chiffre.
+        onWeightInput: (e) => {
+          this._localValue = e.target.value;
+          const v = parseFloat(e.target.value.replace(',','.'));
+          if(!isNaN(v)) this.setWeight(s.id, Math.max(0, Math.min(60, v)));
+          else this.setState(st => ({weights:{...st.weights}}));
+        },
+        // Blur : valide, applique au state global (déclenche le seul re-render autorisé)
+        onPctBlur: (e) => {
+          const v = parseFloat(this._localValue.replace(',','.'));
+          this._activeField = null;
+          this._localValue  = '';
+          if(!isNaN(v)) this.setWeight(s.id, Math.max(0, Math.min(60, v)));
+          else this.setState(st => ({weights:{...st.weights}})); // re-render pour restaurer
+        },
+        onPctKeyDown: (e) => { if(e.key === 'Enter') e.target.blur(); },
+
+        // ── Handlers champ € ──────────────────────────────────────────────────
+        // Focus : valeur brute sans espaces (ex: "20000" au lieu de "20 000")
+        onEurFocus: (e) => {
+          const raw = total > 0 ? String(Math.round(amount * norm(s.id))) : '0';
+          this._activeField = s.id+'-eur';
+          this._localValue  = raw;
+          e.target.value    = raw;
+          setTimeout(() => e.target.select(), 0);
+        },
+        // Input : buffer + setState temps réel (voir onWeightInput)
+        onAmountInput: (e) => {
+          this._localValue = e.target.value;
+          const v = parseFloat(e.target.value.replace(/\s/g,'').replace(',','.'));
+          if(!isNaN(v) && v >= 0) this.setAmountEur(s.id, v);
+          else this.setState(st => ({weights:{...st.weights}}));
+        },
+        // Blur : strip espaces, accepte virgule décimale, applique
+        onEurBlur: (e) => {
+          const v = parseFloat(this._localValue.replace(/\s/g,'').replace(',','.'));
+          this._activeField = null;
+          this._localValue  = '';
+          if(!isNaN(v) && v >= 0) this.setAmountEur(s.id, v);
+          else this.setState(st => ({weights:{...st.weights}})); // re-render pour restaurer
+        },
+        onEurKeyDown: (e) => { if(e.key === 'Enter') e.target.blur(); }
       };
     });
 
@@ -752,6 +956,26 @@ class Component extends DCLogic {
     const incomeAnnualBase = amount * avgRendementBase / 100;
     const diffPessimistic  = incomeAnnualBase - incomeAnnual;
 
+    // Revenus par SCPI
+    const incomeBreakdown = visibleScpi.map(s=>({
+      name: s.name, color: s.color,
+      income: amount * norm(s.id) * rd(s) / 100,
+      incomeStr: this.fmtEur(amount * norm(s.id) * rd(s) / 100),
+      pctStr: (norm(s.id)*100).toFixed(0)+' %'
+    })).filter(x=>x.income > 0.5);
+
+    // Patrimoine historique
+    const legacyTotal = st.legacy.reduce((a,x)=>a+(parseFloat(x.amount)||0), 0);
+    const grandTotal  = amount + legacyTotal;
+    const consolidatedNewPct = grandTotal > 0 ? (amount / grandTotal * 100).toFixed(1) : '50';
+    const legacyRows  = st.legacy.map((leg,i)=>({
+      ...leg,
+      onNameInput:    (e)=>this.updateLegacy(i,'name',e.target.value),
+      onManagerInput: (e)=>this.updateLegacy(i,'manager',e.target.value),
+      onAmountInput:  (e)=>this.updateLegacy(i,'amount',e.target.value),
+      onRemove:       ()=>this.removeLegacy(i)
+    }));
+
     // Vue détail
     const isDetail = st.view !== 'synthese';
     let d = {};
@@ -764,7 +988,7 @@ class Component extends DCLogic {
         color:cur.color, colorSoft:hexSoft(cur.color),
         rendementStr: this.fmtPct(cur.rendement),
         metrics:[
-          {label:'Taux de distribution',        value:this.fmtPct(cur.rendement), color:cur.color},
+          {label:'Échelle de risque (SRI)', value:cur.sri+' / 7', color: cur.sri<=3 ? 'var(--pos)' : (cur.sri<=5 ? '#c79a2a' : 'var(--neg)'), sriDots: Array.from({length:7},(_,i)=>({active:i<cur.sri, col: i<cur.sri ? (cur.sri<=3?'var(--pos)':(cur.sri<=5?'#c79a2a':'var(--neg)')):'var(--line)'}))},
           {label:'Performance globale (PGA)',    value:this.fmtPct(cur.pga),       color:'var(--ink)'},
           {label:'Taux d’occupation (TOF)', value:this.fmtPct(cur.tof,2),     color:'var(--pos)'},
           {label:'Décote',                       value:this.fmtPct(cur.decote),    color:'var(--pos)'},
@@ -778,7 +1002,15 @@ class Component extends DCLogic {
         sectors: cur.sectors.map((s,i)=>({name:s.name, pctStr:String(s.pct).replace('.',',')+' %', color:SEC_COLORS[i%SEC_COLORS.length]})),
         geoPie: (()=>{ let a=0; return 'conic-gradient('+cur.geo.map((g,i)=>{ const c=GEO_COLORS[i%GEO_COLORS.length],s=a; a+=g.pct; return c+' '+s+'% '+a+'%'; }).join(',')+')'; })(),
         secPie: (()=>{ let a=0; return 'conic-gradient('+cur.sectors.map((s,i)=>{ const c=SEC_COLORS[i%SEC_COLORS.length],st=a; a+=s.pct; return c+' '+st+'% '+a+'%'; }).join(',')+')'; })(),
-        sections: cur.sections
+        sections: cur.sections,
+        costs: {
+          entreeStr:      cur.costs.entree.toFixed(2).replace('.',',')+' %',
+          sortieStr:      cur.costs.sortie===0 ? 'Non applicable' : cur.costs.sortie.toFixed(2).replace('.',',')+' %',
+          sortieNote:     cur.costs.sortieNote || null,
+          gestionStr:     cur.costs.gestion.toFixed(2).replace('.',',')+' %',
+          transactionStr: cur.costs.transaction.toFixed(2).replace('.',',')+' %',
+          annuelStr:      (cur.costs.gestion+cur.costs.transaction).toFixed(2).replace('.',',')+' %'
+        }
       };
     }
 
@@ -793,6 +1025,11 @@ class Component extends DCLogic {
       isDetail,
       visibleRows, hiddenRows,
       hiddenSectionDisplay: hiddenRows.length > 0 ? 'flex' : 'none',
+      hiddenPanelDisplay:   st.showHiddenPanel ? 'flex' : 'none',
+      addMoreLabel: st.showHiddenPanel
+        ? '▲ Réduire'
+        : '+ Ajouter d\'autres SCPI (' + hiddenRows.length + ')',
+      toggleHiddenPanel: this.toggleHiddenPanel,
       goSynthese:   this.goSynthese,
       toggleTheme:  this.toggleTheme,
       onEqual:      this.equalize,
@@ -800,7 +1037,7 @@ class Component extends DCLogic {
       syntheseBg:   !isDetail ? 'var(--accent-soft)' : 'transparent',
       syntheseFg:   !isDetail ? 'var(--accent)'      : 'var(--ink-2)',
       amountInput:  fmtAmt(amount),
-      onAmount:     (e) => this.setAmount(parseFloat(e.target.value.replace(/\s/g,'')) || 0),
+      onAmount:     (e) => this.setAmount(parseFloat(e.target.value.replace(/\s/g,'').replace(',','.')) || 0),
       amountStr:    this.fmtEur(amount),
       kpis,
       seg0, seg1, seg2, seg3, seg4, seg5,
@@ -808,6 +1045,7 @@ class Component extends DCLogic {
       geoAgg, sectorAgg,
       incomeAnnualStr:  this.fmtEur(incomeAnnual),
       incomeMonthlyStr: this.fmtEur(incomeAnnual/12),
+      incomeBreakdown,
       totalStr:   Math.round(total)+' %',
       totalColor: totalOk ? 'var(--pos)' : 'var(--neg)',
       totalNote:  totalOk ? '✓ réparti à 100 %' : 'normalisé pour le calcul',
@@ -824,6 +1062,13 @@ class Component extends DCLogic {
       togglePessimistic: this.togglePessimistic,
       exportPdf:    this.exportPdf,
       openSidebar:  this.openSidebar,
+      addLegacy:         this.addLegacy,
+      legacyRows,
+      legacyTotal,
+      legacyTotalStr:    this.fmtEur(legacyTotal),
+      grandTotalStr:     this.fmtEur(grandTotal),
+      consolidatedNewPct,
+      hasLegacy:         st.legacy.length > 0,
       closeSidebar: this.closeSidebar,
       sidebarClass:        sidebarOpen ? 'open' : '',
       sidebarOverlayClass: sidebarOpen ? 'open' : '',
