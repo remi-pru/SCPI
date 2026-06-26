@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -153,6 +153,11 @@
     .costs-total{flex-direction:column!important;align-items:flex-start!important;gap:6px!important;}
     /* Empêche les grilles de déborder sur la droite */
     .detail-geo-grid > div,.detail-sections > div{min-width:0;}
+    /* Vision patrimoniale consolidée : 3 colonnes → 1 colonne sur mobile */
+    .consol-grid{grid-template-columns:1fr!important;}
+    .consol-grid > div{min-width:0;}
+    /* Inputs : font-size ≥ 16px pour empêcher le zoom automatique sur iOS */
+    input[type="text"],input[type="number"]{font-size:16px!important;}
   }
   @media(min-width:821px){
     .burger-btn{display:none!important;}
@@ -351,8 +356,8 @@
               <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
 
                 <!-- SVG Donut centré -->
-                <div style="position:relative;width:220px;height:220px;flex:none;">
-                  <svg width="220" height="220" viewBox="0 0 100 100">
+                <div style="position:relative;width:320px;height:320px;flex:none;">
+                  <svg width="320" height="320" viewBox="0 0 100 100">
                     <!-- Track -->
                     <circle cx="50" cy="50" r="20" fill="none" stroke="var(--surface-3)" stroke-width="8"/>
                     <!-- Segments SCPI 0→5 -->
@@ -384,8 +389,8 @@
                   </svg>
                   <!-- Label centré -->
                   <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                    <div style="font-family:'Spectral',serif;font-size:16px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
-                    <div style="font-size:8.5px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:5px;text-align:center;line-height:1.5;font-weight:600;">Rendement<br>moyen</div>
+                    <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
+                    <div style="font-size:11px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:7px;text-align:center;line-height:1.5;font-weight:600;">Rendement<br>moyen</div>
                   </div>
                 </div>
 
@@ -514,7 +519,7 @@
                   <div style="width:{{ consolidatedNewPct }}%;background:var(--accent);transition:width .5s ease;min-width:4px;"></div>
                   <div style="flex:1;background:var(--surface-3);"></div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div class="consol-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
                   <div style="text-align:center;padding:16px;background:var(--surface-2);border-radius:12px;">
                     <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Nouvelle allocation</div>
                     <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--accent);">{{ amountStr }}</div>
