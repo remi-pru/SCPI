@@ -871,7 +871,7 @@ class Component extends DCLogic {
         id:s.id, name:s.name, manager:s.manager, color:s.color, colorSoft:hexSoft(s.color),
         hidden: isHidden,
         weight,
-        weightStr: (weight % 1 === 0 ? String(weight) : weight.toFixed(2).replace('.',',')) + ' %',
+        weightStr: (weight % 1 === 0 ? String(weight) : weight.toFixed(1).replace('.',',')) + ' %',
         pctStr:    pct.toFixed(0)+' %',
         rendementStr: this.fmtPct(rd(s)),
         track: 'linear-gradient(90deg, var(--accent) '+(weight/60*100)+'%, var(--surface-3) '+(weight/60*100)+'%)',
