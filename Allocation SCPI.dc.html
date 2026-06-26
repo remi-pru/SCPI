@@ -100,7 +100,7 @@
     main{padding:20px 24px!important;}
     body{background:#fff!important;}
     /* Patrimoine historique : masqué en PDF si aucune ligne saisie */
-    .legacy-print-empty{display:none!important;}
+    .legacy-print-empty{display:none!important;margin:0!important;padding:0!important;}
     /* Éviter les coupures à l'intérieur des blocs */
     .kpi-card{break-inside:avoid;}
     .alloc-grid > div{break-inside:avoid;}
@@ -112,6 +112,11 @@
     .detail-geo-grid > div{break-inside:avoid;}
     .detail-sections > div{break-inside:avoid;}
     .costs-block{break-inside:avoid;}
+    /* SCPI detail : hero + métriques sur la même page */
+    .detail-hero{break-after:avoid;}
+    .detail-metrics{break-before:avoid;}
+    /* Montant à investir : restaure 30px sur mobile (> 16px = pas de zoom) */
+    input.main-amount-input{font-size:30px!important;}
     [data-theme="dark"]{
       --bg:#fff;--surface:#fff;--surface-2:#f5f5f5;--surface-3:#ebebeb;
       --ink:#000;--ink-2:#333;--ink-3:#666;--line:#ccc;--line-2:#e5e5e5;
@@ -158,6 +163,8 @@
     .consol-grid > div{min-width:0;}
     /* Inputs : font-size ≥ 16px pour empêcher le zoom automatique sur iOS */
     input[type="text"],input[type="number"]{font-size:16px!important;}
+    /* Montant à investir : conserve sa grande taille (30px > 16px, pas de zoom) */
+    input.main-amount-input{font-size:30px!important;}
   }
   @media(min-width:821px){
     .burger-btn{display:none!important;}
@@ -262,7 +269,7 @@
               <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 22px;box-shadow:var(--shadow-sm);">
                 <div style="font-size:10px;letter-spacing:0.13em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Montant à investir</div>
                 <div style="display:flex;align-items:center;gap:5px;">
-                  <input type="text" value="{{ amountInput }}" onInput="{{ onAmount }}" style="width:165px;font-family:'Spectral',serif;font-size:30px;font-weight:500;border:none;background:transparent;color:var(--ink);outline:none;padding:0;" />
+                  <input type="text" value="{{ amountInput }}" onInput="{{ onAmount }}" class="main-amount-input" style="width:165px;font-family:'Spectral',serif;font-size:30px;font-weight:500;border:none;background:transparent;color:var(--ink);outline:none;padding:0;" />
                   <span style="font-family:'Spectral',serif;font-size:30px;color:var(--ink-3);">€</span>
                 </div>
               </div>
@@ -308,12 +315,12 @@
                     <!-- Pourcentage éditable -->
                     <span style="display:inline-flex;align-items:center;">
                       <input type="text" value="{{ row.weightInput }}" onFocus="{{ row.onPctFocus }}" onInput="{{ row.onWeightInput }}" onBlur="{{ row.onPctBlur }}" onKeyDown="{{ row.onPctKeyDown }}" style="width:38px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);">%</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);margin-left:2px;">%</span>
                     </span>
                     <!-- € input synchronisé -->
                     <span style="display:inline-flex;align-items:center;margin-right:2px;">
                       <input type="text" value="{{ row.amountEurStr }}" onFocus="{{ row.onEurFocus }}" onInput="{{ row.onAmountInput }}" onBlur="{{ row.onEurBlur }}" onKeyDown="{{ row.onEurKeyDown }}" style="width:68px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);">€</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);margin-left:2px;">€</span>
                     </span>
                     <!-- Bouton masquer -->
                     <button class="hide-scpi-btn" onClick="{{ row.onHide }}" title="Masquer cette SCPI" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:5px;background:transparent;cursor:pointer;color:var(--ink-3);flex:none;padding:0;transition:color .15s,background .15s;">
@@ -351,9 +358,9 @@
             </div>
 
             <!-- Donut SVG + légende -->
-            <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-              <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 22px;">Répartition</h2>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);">
+              <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 10px;">Répartition</h2>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
 
                 <!-- SVG Donut centré -->
                 <div style="position:relative;width:320px;height:320px;flex:none;">
@@ -549,7 +556,7 @@
           <button class="btn-ghost no-print" onClick="{{ goSynthese }}" style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-2);cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;margin-bottom:26px;transition:border-color .15s,color .15s;">← Retour à la synthèse</button>
 
           <!-- Hero header -->
-          <div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:36px 40px;box-shadow:var(--shadow-lg);margin-bottom:22px;position:relative;overflow:hidden;">
+          <div class="detail-hero" style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:36px 40px;box-shadow:var(--shadow-lg);margin-bottom:22px;position:relative;overflow:hidden;">
             <div style="position:absolute;top:0;left:0;width:6px;height:100%;background:{{ d.color }};"></div>
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;">
               <div style="flex:1;min-width:260px;">
