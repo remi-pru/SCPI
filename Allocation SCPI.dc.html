@@ -686,6 +686,27 @@
                 <span style="font-size:11.5px;color:var(--ink-3);">{{ fscResult.detail }}</span>
               </div>
 
+              <!-- Détail par société (mode IS) -->
+              <sc-if value="{{ showFscCompanies }}">
+                <div style="margin-top:16px;border-top:1px solid var(--line-2);padding-top:14px;">
+                  <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;">Résultat net par société</div>
+                  <div style="display:grid;grid-template-columns:1fr repeat(3,auto);gap:0 18px;padding:0 0 6px 0;border-bottom:1px solid var(--line-2);margin-bottom:2px;">
+                    <span style="font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Société</span>
+                    <span style="font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Revenu brut</span>
+                    <span style="font-size:10.5px;color:var(--neg);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">IS</span>
+                    <span style="font-size:10.5px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Net après impôt</span>
+                  </div>
+                  <sc-for list="{{ fscCompaniesRows }}" as="cRow">
+                    <div style="display:grid;grid-template-columns:1fr repeat(3,auto);gap:0 18px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2);">
+                      <span style="font-size:13px;color:var(--ink);font-weight:500;">{{ cRow.name }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-2);text-align:right;">{{ cRow.revStr }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--neg);text-align:right;">{{ cRow.isStr }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--pos);text-align:right;">{{ cRow.netStr }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
             </div>
           </div>
 
@@ -1230,36 +1251,58 @@ class Component extends DCLogic {
           detail:        (isMicro?'Micro-foncier (base 70 %)':'Régime réel')+' · TMI '+fsc.tmi+' % + PS 17,2 %',
         };
       } else {
-        const frais   = 500;
-        const res     = Math.max(0, revenu - frais);
-        const is      = res<=42500 ? res*0.15 : 42500*0.15+(res-42500)*0.25;
-        const apresIS = res - is;
+        // ── Calcul IS par société ─────────────────────────────────────────────
+        const socs     = (st.companies && st.companies.length > 0) ? st.companies : [{name:'Société 1', pct:100}];
+        const pctSum   = socs.reduce((s,co)=>s+(co.pct||0), 0) || 100;
+        const calcISbracket = base => base <= 0 ? 0 : base <= 42500 ? base*0.15 : 42500*0.15+(base-42500)*0.25;
+        const coData = socs.map(co => {
+          const rev_co      = revenu * ((co.pct||0) / pctSum);
+          const res_co      = Math.max(0, rev_co - 500);
+          const is_co       = calcISbracket(res_co);
+          const netIS_co    = res_co - is_co;
+          const flat_co     = fsc.apport === 'cca' ? 0 : netIS_co * 0.30;
+          const netFinal_co = netIS_co - flat_co;
+          return { name: co.name, pct: co.pct||0, rev_co, res_co, is_co, netIS_co, flat_co, netFinal_co };
+        });
+        const fraisTotal  = socs.length * 500;
+        const isTotal     = coData.reduce((s,co)=>s+co.is_co, 0);
+        const flatTotal   = coData.reduce((s,co)=>s+co.flat_co, 0);
+        const netTotal    = coData.reduce((s,co)=>s+co.netFinal_co, 0);
+        const impotsTotal = isTotal + fraisTotal + flatTotal;
+        const nStr        = socs.length > 1 ? socs.length+'x500'+' €' : '500 €';
         if(fsc.apport==='cca'){
-          const net    = apresIS;
-          const impots = is + frais;
           return {
             revenuBrutStr: this.fmtEur(Math.round(revenu)),
-            impotsStr:     this.fmtEur(Math.round(impots)),
-            netStr:        this.fmtEur(Math.round(net)),
-            rendNetStr:    amount>0 ? this.fmtPct(net/amount*100,2) : '0,00 %',
-            tauxStr:       revenu>0 ? (impots/revenu*100).toFixed(0)+' %' : '0 %',
-            detail:        'IS 15 % (puis 25 % > 42 500 €) · Retrait CCA - sans fiscalité supplémentaire',
+            impotsStr:     this.fmtEur(Math.round(isTotal + fraisTotal)),
+            netStr:        this.fmtEur(Math.round(netTotal)),
+            rendNetStr:    amount>0 ? this.fmtPct(netTotal/amount*100,2) : '0,00 %',
+            tauxStr:       revenu>0 ? ((isTotal+fraisTotal)/revenu*100).toFixed(0)+' %' : '0 %',
+            detail:        'IS par société (tranche 15'+' %/25 % par entité) · Frais '+nStr+' · Retrait CCA',
+            companiesIS:   coData,
           };
         } else {
-          const flat   = apresIS * 0.30;
-          const net    = apresIS - flat;
-          const impots = is + frais + flat;
           return {
             revenuBrutStr: this.fmtEur(Math.round(revenu)),
-            impotsStr:     this.fmtEur(Math.round(impots)),
-            netStr:        this.fmtEur(Math.round(net)),
-            rendNetStr:    amount>0 ? this.fmtPct(net/amount*100,2) : '0,00 %',
-            tauxStr:       revenu>0 ? (impots/revenu*100).toFixed(0)+' %' : '0 %',
-            detail:        'IS 15 % (puis 25 %) + Flat tax 30 % sur dividendes',
+            impotsStr:     this.fmtEur(Math.round(impotsTotal)),
+            netStr:        this.fmtEur(Math.round(netTotal)),
+            rendNetStr:    amount>0 ? this.fmtPct(netTotal/amount*100,2) : '0,00 %',
+            tauxStr:       revenu>0 ? (impotsTotal/revenu*100).toFixed(0)+' %' : '0 %',
+            detail:        'IS par société (tranche 15'+' %/25 % par entité) · Frais '+nStr+' · Flat tax 30 % sur dividendes',
+            companiesIS:   coData,
           };
         }
       }
     })();
+    // Lignes par société pour l'affichage détaillé
+    const fscCompaniesRows = fsc.mode === 'is' && fscResult.companiesIS
+      ? fscResult.companiesIS.map(co => ({
+          name:   co.name,
+          revStr: this.fmtEur(Math.round(co.rev_co)),
+          isStr:  this.fmtEur(Math.round(co.is_co)),
+          netStr: this.fmtEur(Math.round(co.netFinal_co)),
+        }))
+      : null;
+    const showFscCompanies = !!fscCompaniesRows;
     const fscTmiOptions = [0,11,30,41,45].map(v=>({
       label: v===0?'0 %':v+' %',
       bg:     fsc.tmi===v ? 'var(--accent)'      : 'var(--surface-2)',
@@ -1366,7 +1409,7 @@ class Component extends DCLogic {
       companyRows, companyTotalStr, companyTotalOk, companyTotalColor,
       companyRevenuTotalStr: this.fmtEur(Math.round(incomeAnnual)),
       addCompany: this.addCompany,
-      fscResult, fscTmiOptions,
+      fscResult, fscCompaniesRows, showFscCompanies, fscTmiOptions,
       fscIsPropre: fsc.mode==='propre',
       fscIsIS:     fsc.mode==='is',
       fscIsCCA:    fsc.apport==='cca',
