@@ -358,9 +358,12 @@
               </div>
 
               <sc-if value="{{ showUnallocated }}">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2);">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2);">
                   <span style="font-size:12.5px;color:var(--ink-2);">Montant non investi<span style="font-size:11px;color:var(--ink-3);margin-left:8px;">(budget - achats entiers de parts)</span></span>
-                  <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:{{ unallocatedColor }};font-variant-numeric:tabular-nums;">{{ unallocatedStr }}</span>
+                  <span style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                    <button onClick="{{ onOptimize }}" title="Minimiser le montant non investi par achat de parts supplémentaires et échanges optimisés" style="padding:3px 10px;font-size:11px;font-family:inherit;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent);border-radius:7px;cursor:pointer;white-space:nowrap;">Optimiser</button>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:{{ unallocatedColor }};font-variant-numeric:tabular-nums;">{{ unallocatedStr }}</span>
+                  </span>
                 </div>
               </sc-if>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;">
@@ -655,7 +658,7 @@
                   </div>
                   <div style="padding:14px 18px;background:var(--surface-2);border-radius:12px;flex:none;">
                     <div style="font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Frais comptables</div>
-                    <div style="font-family:'Spectral',serif;font-size:24px;font-weight:500;color:var(--ink);">500 €<span style="font-size:13px;color:var(--ink-3);font-family:'IBM Plex Sans',system-ui,sans-serif;"> / an</span></div>
+                    <div style="font-family:'Spectral',serif;font-size:24px;font-weight:500;color:var(--ink);">{ fscNbSocietes > 1 ? fscNbSocietes+'×500' : '500' } €<span style="font-size:13px;color:var(--ink-3);font-family:'IBM Plex Sans',system-ui,sans-serif;"> / an{ fscNbSocietes > 1 ? '/société' : '' }</span></div>
                     <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">déduits du résultat imposable</div>
                   </div>
                 </div>
@@ -690,20 +693,24 @@
               <sc-if value="{{ showFscCompanies }}">
                 <div style="margin-top:16px;border-top:1px solid var(--line-2);padding-top:14px;">
                   <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;">Résultat net par société</div>
-                  <div style="display:grid;grid-template-columns:1fr repeat(3,auto);gap:0 18px;padding:0 0 6px 0;border-bottom:1px solid var(--line-2);margin-bottom:2px;">
+                  <div style="overflow-x:auto;">
+                  <div style="display:grid;grid-template-columns:1fr repeat(4,auto);gap:0 16px;padding:0 0 6px 0;border-bottom:1px solid var(--line-2);margin-bottom:2px;min-width:420px;">
                     <span style="font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Société</span>
                     <span style="font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Revenu brut</span>
                     <span style="font-size:10.5px;color:var(--neg);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">IS</span>
                     <span style="font-size:10.5px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Net après impôt</span>
+                    <span style="font-size:10.5px;color:var(--pos);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Rend. net</span>
                   </div>
                   <sc-for list="{{ fscCompaniesRows }}" as="cRow">
-                    <div style="display:grid;grid-template-columns:1fr repeat(3,auto);gap:0 18px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2);">
+                    <div style="display:grid;grid-template-columns:1fr repeat(4,auto);gap:0 16px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2);min-width:420px;">
                       <span style="font-size:13px;color:var(--ink);font-weight:500;">{{ cRow.name }}</span>
                       <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-2);text-align:right;">{{ cRow.revStr }}</span>
                       <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--neg);text-align:right;">{{ cRow.isStr }}</span>
                       <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--pos);text-align:right;">{{ cRow.netStr }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--pos);text-align:right;">{{ cRow.rendStr }}</span>
                     </div>
                   </sc-for>
+                  </div>
                 </div>
               </sc-if>
 
@@ -1012,6 +1019,70 @@ class Component extends DCLogic {
     const pct = Math.max(0, Math.min(60, (snapped / amount) * 100));
     this.setWeight(id, Math.round(pct * 100) / 100);
   };
+
+  optimizeAllocation = () => {
+    const st     = this.state;
+    const amount = st.amount == null ? (this.props.defaultAmount ?? 100000) : st.amount;
+    if (!amount) return;
+    const hiddenScpis = st.hiddenScpis || {};
+    const visibleScpi = SCPI.filter(s => !hiddenScpis[s.id] && s.prix > 0);
+    if (!visibleScpi.length) return;
+    const w     = st.weights;
+    const total = visibleScpi.reduce((a, s) => a + (w[s.id] || 0), 0);
+    const norm  = id => total > 0 ? (w[id] || 0) / total : 0;
+
+    // Allocation initiale : plancher
+    const parts = {};
+    for (const s of visibleScpi) parts[s.id] = Math.floor(amount * norm(s.id) / s.prix);
+
+    const totalCost = () => visibleScpi.reduce((sum, s) => sum + parts[s.id] * s.prix, 0);
+    let remaining = amount - totalCost();
+
+    // Greedy fill + swaps jusqu'à convergence
+    let improved = true;
+    while (improved) {
+      improved = false;
+      // 1. Acheter la part la plus chère qui rentre dans le reliquat
+      const sorted = [...visibleScpi].sort((a, b) => b.prix - a.prix);
+      for (const s of sorted) {
+        if (remaining >= s.prix) {
+          parts[s.id]++;
+          remaining -= s.prix;
+          improved = true;
+          break;
+        }
+      }
+      if (improved) continue;
+      // 2. Swap : vendre 1 part bon marché, acheter 1 part plus chère
+      let bestDelta = 0, bestSell = null, bestBuy = null;
+      for (const sell of visibleScpi) {
+        if (parts[sell.id] < 1) continue;
+        const available = remaining + sell.prix;
+        for (const buy of visibleScpi) {
+          if (buy.id === sell.id) continue;
+          if (buy.prix > sell.prix && buy.prix <= available) {
+            const delta = buy.prix - sell.prix;
+            if (delta > bestDelta) { bestDelta = delta; bestSell = sell; bestBuy = buy; }
+          }
+        }
+      }
+      if (bestDelta > 0) {
+        parts[bestSell.id]--;
+        parts[bestBuy.id]++;
+        remaining += bestSell.prix - bestBuy.prix;
+        improved = true;
+      }
+    }
+
+    // Recalculer les poids en % de l'allocation réelle
+    const tc = totalCost();
+    const newWeights = { ...w };
+    for (const s of visibleScpi) {
+      newWeights[s.id] = tc > 0 ? Math.round(parts[s.id] * s.prix / tc * 10000) / 100 : w[s.id];
+    }
+    this.setState({ weights: newWeights });
+  };
+
   addLegacy    = () => this.setState(s=>({legacy:[...s.legacy,{name:'',manager:'',amount:''}]}));
   removeLegacy = (i) => this.setState(s=>({legacy:s.legacy.filter((_,j)=>j!==i)}));
   updateLegacy = (i,field,val) => this.setState(s=>{
@@ -1262,7 +1333,8 @@ class Component extends DCLogic {
           const netIS_co    = res_co - is_co;
           const flat_co     = fsc.apport === 'cca' ? 0 : netIS_co * 0.30;
           const netFinal_co = netIS_co - flat_co;
-          return { name: co.name, pct: co.pct||0, rev_co, res_co, is_co, netIS_co, flat_co, netFinal_co };
+          const amount_co = amount * ((co.pct||0) / pctSum);
+          return { name: co.name, pct: co.pct||0, rev_co, res_co, is_co, netIS_co, flat_co, netFinal_co, amount_co };
         });
         const fraisTotal  = socs.length * 500;
         const isTotal     = coData.reduce((s,co)=>s+co.is_co, 0);
@@ -1299,7 +1371,8 @@ class Component extends DCLogic {
           name:   co.name,
           revStr: this.fmtEur(Math.round(co.rev_co)),
           isStr:  this.fmtEur(Math.round(co.is_co)),
-          netStr: this.fmtEur(Math.round(co.netFinal_co)),
+          netStr:  this.fmtEur(Math.round(co.netFinal_co)),
+          rendStr: co.amount_co > 0 ? this.fmtPct(co.netFinal_co / co.amount_co * 100, 2) : '-',
         }))
       : null;
     const showFscCompanies = !!fscCompaniesRows;
@@ -1382,6 +1455,7 @@ class Component extends DCLogic {
       incomeMonthlyStr: this.fmtEur(incomeAnnual/12),
       incomeBreakdown,
       unallocatedStr, unallocatedColor, showUnallocated: amount > 0,
+      onOptimize: () => this.optimizeAllocation(),
       totalStr:   Math.round(total)+' %',
       totalColor: totalOk ? 'var(--pos)' : 'var(--neg)',
       totalNote:  totalOk ? '✓ réparti à 100 %' : 'normalisé pour le calcul',
@@ -1409,6 +1483,7 @@ class Component extends DCLogic {
       companyRows, companyTotalStr, companyTotalOk, companyTotalColor,
       companyRevenuTotalStr: this.fmtEur(Math.round(incomeAnnual)),
       addCompany: this.addCompany,
+      fscNbSocietes: st.companies.length || 1,
       fscResult, fscCompaniesRows, showFscCompanies, fscTmiOptions,
       fscIsPropre: fsc.mode==='propre',
       fscIsIS:     fsc.mode==='is',
