@@ -1031,14 +1031,28 @@ class Component extends DCLogic {
     const total = visibleScpi.reduce((a, s) => a + (w[s.id] || 0), 0);
     const norm  = id => total > 0 ? (w[id] || 0) / total : 0;
 
-    // Allocation initiale : plancher (epsilon 1e-9 pour les prix décimaux)
+    // Bornes ±2 points de % absolus par SCPI
+    // Garantit : |n_i * prix_i / amount * 100 - target%_i| ≤ 2
+    const bounds = {};
+    for (const s of visibleScpi) {
+      const tgt = norm(s.id);
+      bounds[s.id] = {
+        min: Math.max(0, Math.ceil(amount * Math.max(0, tgt - 0.02) / s.prix - 1e-9)),
+        max: Math.floor(amount * (tgt + 0.02) / s.prix + 1e-9),
+      };
+    }
+
+    // Allocation initiale : plancher SANS epsilon
+    // Math.floor(x) ≤ x → sum(parts*prix) ≤ sum(amount*norm) = amount, garanti
     let parts = {};
     for (const s of visibleScpi)
-      parts[s.id] = Math.floor(amount * norm(s.id) / s.prix + 1e-9);
+      parts[s.id] = Math.max(bounds[s.id].min,
+                    Math.min(bounds[s.id].max,
+                    Math.floor(amount * norm(s.id) / s.prix)));
 
     const totalCost = p => visibleScpi.reduce((sum, s) => sum + (p[s.id] || 0) * s.prix, 0);
 
-    // ── Greedy fill : achat de la part la plus chère qui rentre ──────────────
+    // Greedy fill : part la plus chère qui rentre, dans la limite n_max
     const greedyFill = (p, rem) => {
       const r = Object.assign({}, p);
       let cash = rem;
@@ -1047,8 +1061,8 @@ class Component extends DCLogic {
       while (ok) {
         ok = false;
         for (const s of sorted) {
-          if (cash + 1e-9 >= s.prix) {
-            r[s.id] = (r[s.id] || 0) + 1;
+          if (cash + 1e-9 >= s.prix && r[s.id] < bounds[s.id].max) {
+            r[s.id]++;
             cash -= s.prix;
             ok = true;
             break;
@@ -1060,56 +1074,52 @@ class Component extends DCLogic {
 
     let cur = greedyFill(parts, amount - totalCost(parts));
 
-    // ── Optimisation par ventes multi-parts (jusqu'à 100 itérations) ─────────
-    // À chaque itération : on teste TOUTES les combinaisons (1 SCPI × k parts
-    // puis 2 SCPIs × k1 × k2 parts), on sélectionne celle qui minimise le
-    // reliquat, on l'applique et on recommence.
+    // Optimisation : ventes contraintes ±2 %, jusqu'à 100 itérations
     for (let iter = 0; iter < 100; iter++) {
       let bestRem = cur.rem;
       let bestState = null;
 
-      // ─ Phase A : vente de 1 SCPI (k = 1..5 parts) ────────────────────────
+      // Phase A : vendre k parts d'1 SCPI (k=1..5), en restant >= n_min
       for (const sell of visibleScpi) {
-        const maxK = cur.p[sell.id] || 0;
-        for (let k = 1; k <= Math.min(maxK, 5); k++) {
+        const maxK = Math.min(cur.p[sell.id] - bounds[sell.id].min, 5);
+        for (let k = 1; k <= maxK; k++) {
           const tmp = Object.assign({}, cur.p, { [sell.id]: cur.p[sell.id] - k });
-          const avail = cur.rem + k * sell.prix;
-          const trial = greedyFill(tmp, avail);
+          const trial = greedyFill(tmp, cur.rem + k * sell.prix);
           if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
         }
       }
 
-      // ─ Phase B : vente de 2 SCPIs différentes (k1, k2 = 1..3 parts) ──────
+      // Phase B : vendre (k1,k2) parts de 2 SCPIs differentes (k=1..3)
       for (let a = 0; a < visibleScpi.length; a++) {
         const sA = visibleScpi[a];
-        if (!(cur.p[sA.id] > 0)) continue;
+        const maxKA = Math.min(cur.p[sA.id] - bounds[sA.id].min, 3);
+        if (maxKA < 1) continue;
         for (let b = a + 1; b < visibleScpi.length; b++) {
           const sB = visibleScpi[b];
-          if (!(cur.p[sB.id] > 0)) continue;
-          for (let ka = 1; ka <= Math.min(cur.p[sA.id], 3); ka++) {
-            for (let kb = 1; kb <= Math.min(cur.p[sB.id], 3); kb++) {
+          const maxKB = Math.min(cur.p[sB.id] - bounds[sB.id].min, 3);
+          if (maxKB < 1) continue;
+          for (let ka = 1; ka <= maxKA; ka++) {
+            for (let kb = 1; kb <= maxKB; kb++) {
               const tmp = Object.assign({}, cur.p,
                 { [sA.id]: cur.p[sA.id] - ka, [sB.id]: cur.p[sB.id] - kb });
-              const avail = cur.rem + ka * sA.prix + kb * sB.prix;
-              const trial = greedyFill(tmp, avail);
+              const trial = greedyFill(tmp, cur.rem + ka * sA.prix + kb * sB.prix);
               if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
             }
           }
         }
       }
 
-      if (!bestState) break;  // convergence
+      if (!bestState) break;
       cur = bestState;
     }
 
-    // ── Recalculer les poids en % de l'allocation réelle ─────────────────────
+    // Recalcul des poids en % de l'investi reel (sum ~= 100)
     const tc = totalCost(cur.p);
     const newWeights = Object.assign({}, w);
     for (const s of visibleScpi)
       newWeights[s.id] = tc > 0 ? Math.round((cur.p[s.id] || 0) * s.prix / tc * 10000) / 100 : w[s.id];
     this.setState({ weights: newWeights });
   };
-
   addLegacy    = () => this.setState(s=>({legacy:[...s.legacy,{name:'',manager:'',amount:''}]}));
   removeLegacy = (i) => this.setState(s=>({legacy:s.legacy.filter((_,j)=>j!==i)}));
   updateLegacy = (i,field,val) => this.setState(s=>{
