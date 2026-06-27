@@ -112,6 +112,7 @@
     .detail-geo-grid > div{break-inside:avoid;}
     .detail-sections > div{break-inside:avoid;}
     .costs-block{break-inside:avoid;}
+    .fsc-results > div{break-inside:avoid;}
     /* SCPI detail : hero + métriques sur la même page */
     .detail-hero{break-after:avoid;}
     .detail-metrics{break-before:avoid;}
@@ -161,6 +162,10 @@
     /* Vision patrimoniale consolidée : 3 colonnes → 1 colonne sur mobile */
     .consol-grid{grid-template-columns:1fr!important;}
     .consol-grid > div{min-width:0;}
+    /* Rentabilité nette : 3 colonnes → 1 colonne */
+    .fsc-results{grid-template-columns:1fr!important;}
+    /* Table sociétés : scroll horizontal si écran étroit */
+    .co-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     /* Inputs : font-size ≥ 16px pour empêcher le zoom automatique sur iOS */
     input[type="text"],input[type="number"]{font-size:16px!important;}
     /* Montant à investir : conserve sa grande taille (30px > 16px, pas de zoom) */
@@ -544,6 +549,136 @@
             </sc-if>
           </div>
 
+          <!-- Répartition multi-sociétés -->
+          <div style="margin-top:28px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+              <div>
+                <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 4px;">Répartition multi-sociétés</h2>
+                <p style="font-size:12.5px;color:var(--ink-3);margin:0;">Divisez votre investissement entre plusieurs structures juridiques</p>
+              </div>
+              <button onClick="{{ addCompany }}" class="no-print" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px dashed var(--line);border-radius:9px;background:transparent;color:var(--ink-2);cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;transition:border-color .15s,color .15s;">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Ajouter une société
+              </button>
+            </div>
+            <div class="co-table-wrap" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
+              <div style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:10px 20px;background:var(--surface-2);border-bottom:1px solid var(--line);min-width:500px;">
+                <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">Structure</span>
+                <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:right;">Répartition</span>
+                <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:right;">Capital investi</span>
+                <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:right;">Revenu annuel</span>
+                <span></span>
+              </div>
+              <sc-for list="{{ companyRows }}" as="co" hint-placeholder-count="1">
+                <div style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:11px 20px;border-bottom:1px solid var(--line-2);align-items:center;min-width:500px;">
+                  <input type="text" value="{{ co.name }}" onInput="{{ co.onNameInput }}" style="font-size:13px;color:var(--ink);border:none;background:transparent;outline:none;font-family:inherit;width:100%;padding-right:12px;" />
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:2px;">
+                    <input type="text" value="{{ co.pct }}" onFocus="this.select()" onInput="{{ co.onPctInput }}" style="width:36px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);border:none;background:transparent;outline:none;text-align:right;padding:0;" />
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);"> %</span>
+                  </div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-2);text-align:right;">{{ co.amountStr }}</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);text-align:right;">{{ co.revenuStr }}</div>
+                  <button onClick="{{ co.onRemove }}" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:6px;background:transparent;cursor:pointer;color:var(--ink-3);margin-left:auto;">
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="1" y1="1" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="1" x2="1" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </button>
+                </div>
+              </sc-for>
+              <div style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:12px 20px;background:var(--surface-2);align-items:center;min-width:500px;">
+                <span style="font-size:13px;font-weight:700;color:var(--ink);">Total</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:{{ companyTotalColor }};text-align:right;">{{ companyTotalStr }}</span>
+                <span></span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--ink);text-align:right;">{{ companyRevenuTotalStr }}</span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rentabilité nette après impôt -->
+          <div style="margin-top:28px;">
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);">
+              <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 22px;">Rentabilité nette après impôt</h2>
+
+              <!-- Sélecteur de régime -->
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink-2);">Régime :</span>
+                <button onClick="{{ onFscModePropre }}" style="padding:8px 18px;border-radius:9px;border:none;background:{{ fscModePropBg }};color:{{ fscModePropFg }};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">Nom propre</button>
+                <button onClick="{{ onFscModeIS }}" style="padding:8px 18px;border-radius:9px;border:none;background:{{ fscModeISBg }};color:{{ fscModeISFg }};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">Société à l’IS</button>
+              </div>
+
+              <!-- Paramètres : Nom propre -->
+              <sc-if value="{{ fscIsPropre }}">
+                <div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:22px;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;">Tranche marginale d’imposition</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                      <sc-for list="{{ fscTmiOptions }}" as="opt" hint-placeholder-count="5">
+                        <button onClick="{{ opt.onClick }}" style="padding:7px 14px;border-radius:8px;border:1px solid {{ opt.border }};background:{{ opt.bg }};color:{{ opt.fg }};font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;">{{ opt.label }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;">Régime fiscal</div>
+                    <div style="display:flex;gap:6px;">
+                      <button onClick="{{ onFscRegimeReel }}" style="padding:7px 14px;border-radius:8px;border:1px solid {{ fscReelBorder }};background:{{ fscReelBg }};color:{{ fscReelFg }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;">Régime réel</button>
+                      <button onClick="{{ onFscRegimeMicro }}" style="padding:7px 14px;border-radius:8px;border:1px solid {{ fscMicroBorder }};background:{{ fscMicroBg }};color:{{ fscMicroFg }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;">Micro-foncier</button>
+                    </div>
+                    <p style="font-size:11px;color:var(--ink-3);margin:8px 0 0;max-width:380px;line-height:1.5;">Micro-foncier : abattement 30 % appliqué sur la base imposable (IR + PS). Disponible si revenus fonciers ≤ 15 000 €.</p>
+                  </div>
+                </div>
+              </sc-if>
+
+              <!-- Paramètres : Société IS -->
+              <sc-if value="{{ fscIsIS }}">
+                <div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:22px;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;">Mode d’apport</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                      <button onClick="{{ onFscApportCCA }}" style="padding:7px 16px;border-radius:8px;border:1px solid {{ fscCCABorder }};background:{{ fscCCABg }};color:{{ fscCCAFg }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;">Compte courant d’associé</button>
+                      <button onClick="{{ onFscApportNum }}" style="padding:7px 16px;border-radius:8px;border:1px solid {{ fscNumBorder }};background:{{ fscNumBg }};color:{{ fscNumFg }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;">Apport en numéraire</button>
+                    </div>
+                    <sc-if value="{{ fscIsCCA }}">
+                      <p style="font-size:11px;color:var(--ink-3);margin:8px 0 0;max-width:420px;line-height:1.5;">CCA : le remboursement du capital n’est pas fiscalisé. Seul l’IS s’applique sur les bénéfices.</p>
+                    </sc-if>
+                    <sc-if value="{{ fscIsNum }}">
+                      <p style="font-size:11px;color:var(--ink-3);margin:8px 0 0;max-width:420px;line-height:1.5;">Numéraire : les dividendes distribués supportent la flat tax (PFU 30 %) après l’IS.</p>
+                    </sc-if>
+                  </div>
+                  <div style="padding:14px 18px;background:var(--surface-2);border-radius:12px;flex:none;">
+                    <div style="font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Frais comptables</div>
+                    <div style="font-family:'Spectral',serif;font-size:24px;font-weight:500;color:var(--ink);">500 €<span style="font-size:13px;color:var(--ink-3);font-family:'IBM Plex Sans',system-ui,sans-serif;"> / an</span></div>
+                    <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">déduits du résultat imposable</div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <!-- Résultats -->
+              <div class="fsc-results" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div style="text-align:center;padding:16px;background:var(--surface-2);border-radius:12px;">
+                  <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;">Revenu brut annuel</div>
+                  <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--ink);">{{ fscResult.revenuBrutStr }}</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:var(--surface-2);border-radius:12px;">
+                  <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--neg);font-weight:700;margin-bottom:8px;">Impôts et charges</div>
+                  <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--neg);">{{ fscResult.impotsStr }}</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:var(--accent-soft);border-radius:12px;">
+                  <div style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px;">Revenu net</div>
+                  <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;color:var(--accent);">{{ fscResult.netStr }}</div>
+                </div>
+              </div>
+
+              <!-- Barre récapitulative -->
+              <div style="margin-top:14px;padding:13px 16px;background:var(--surface-2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div>
+                  <span style="font-size:13.5px;font-weight:700;color:var(--ink);">Rendement net : {{ fscResult.rendNetStr }}</span>
+                  <span style="font-size:12.5px;color:var(--ink-3);margin-left:14px;">Taux effectif d’imposition : {{ fscResult.tauxStr }}</span>
+                </div>
+                <span style="font-size:11.5px;color:var(--ink-3);">{{ fscResult.detail }}</span>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </sc-if>
 
@@ -797,7 +932,9 @@ class Component extends DCLogic {
     sidebarOpen: false,
     hiddenScpis: {},
     showHiddenPanel: false,
-    legacy: []
+    legacy: [],
+    companies: [{name:'Société 1', pct:100}],
+    fiscalite: {mode:'propre', tmi:30, regime:'reel', apport:'cca'}
   };
 
   // ── Buffer d'édition (non-réactif — hors state) ───────────────────────────
@@ -845,6 +982,12 @@ class Component extends DCLogic {
   updateLegacy = (i,field,val) => this.setState(s=>{
     const legacy=[...s.legacy]; legacy[i]={...legacy[i],[field]:val}; return {legacy};
   });
+  addCompany    = () => this.setState(s=>({companies:[...s.companies,{name:'Société '+(s.companies.length+1),pct:0}]}));
+  removeCompany = (i) => this.setState(s=>({companies:s.companies.filter((_,j)=>j!==i)}));
+  updateCompany = (i,f,v) => this.setState(s=>{
+    const companies=[...s.companies]; companies[i]={...companies[i],[f]:v}; return {companies};
+  });
+  setFiscalite  = (f,v) => this.setState(s=>({fiscalite:{...s.fiscalite,[f]:v}}));
 
   renderVals(){
     const st = this.state;
@@ -1014,6 +1157,87 @@ class Component extends DCLogic {
       onRemove:       ()=>this.removeLegacy(i)
     }));
 
+    // Répartition multi-sociétés
+    const companyTotal = st.companies.reduce((a,co)=>a+(parseFloat(co.pct)||0),0);
+    const companyRows  = st.companies.map((comp,i)=>{
+      const pct = parseFloat(comp.pct)||0;
+      const compAmount = amount * pct / 100;
+      const compRevenu = compAmount * avgRendement / 100;
+      return {
+        name: comp.name,
+        pct,
+        amountStr: this.fmtEur(Math.round(compAmount)),
+        revenuStr: this.fmtEur(Math.round(compRevenu)),
+        onNameInput: (e)=>this.updateCompany(i,'name',e.target.value),
+        onPctInput:  (e)=>{
+          const v=parseFloat(e.target.value.replace(',','.'));
+          this.updateCompany(i,'pct',isNaN(v)?0:Math.max(0,Math.min(100,v)));
+        },
+        onRemove: ()=>this.removeCompany(i),
+      };
+    });
+    const companyTotalOk    = Math.abs(companyTotal-100)<0.11;
+    const companyTotalStr   = companyTotal.toFixed(1).replace('.',',')+' %';
+    const companyTotalColor = companyTotalOk ? 'var(--pos)' : 'var(--neg)';
+
+    // Rentabilité nette après impôt
+    const fsc = st.fiscalite;
+    const fscResult = (()=>{
+      const revenu = incomeAnnual;
+      if(fsc.mode==='propre'){
+        const isMicro = fsc.regime==='micro' && revenu<=15000;
+        const base    = isMicro ? revenu*0.70 : revenu;
+        const ir      = base * (fsc.tmi/100);
+        const ps      = base * 0.172;
+        const impots  = ir + ps;
+        const net     = revenu - impots;
+        return {
+          revenuBrutStr: this.fmtEur(Math.round(revenu)),
+          impotsStr:     this.fmtEur(Math.round(impots)),
+          netStr:        this.fmtEur(Math.round(net)),
+          rendNetStr:    amount>0 ? this.fmtPct(net/amount*100,2) : '0,00 %',
+          tauxStr:       revenu>0 ? (impots/revenu*100).toFixed(0)+' %' : '0 %',
+          detail:        (isMicro?'Micro-foncier (base 70 %)':'Régime réel')+' · TMI '+fsc.tmi+' % + PS 17,2 %',
+        };
+      } else {
+        const frais   = 500;
+        const res     = Math.max(0, revenu - frais);
+        const is      = res<=42500 ? res*0.15 : 42500*0.15+(res-42500)*0.25;
+        const apresIS = res - is;
+        if(fsc.apport==='cca'){
+          const net    = apresIS;
+          const impots = is + frais;
+          return {
+            revenuBrutStr: this.fmtEur(Math.round(revenu)),
+            impotsStr:     this.fmtEur(Math.round(impots)),
+            netStr:        this.fmtEur(Math.round(net)),
+            rendNetStr:    amount>0 ? this.fmtPct(net/amount*100,2) : '0,00 %',
+            tauxStr:       revenu>0 ? (impots/revenu*100).toFixed(0)+' %' : '0 %',
+            detail:        'IS 15 % (puis 25 % > 42 500 €) · Retrait CCA — sans fiscalité supplémentaire',
+          };
+        } else {
+          const flat   = apresIS * 0.30;
+          const net    = apresIS - flat;
+          const impots = is + frais + flat;
+          return {
+            revenuBrutStr: this.fmtEur(Math.round(revenu)),
+            impotsStr:     this.fmtEur(Math.round(impots)),
+            netStr:        this.fmtEur(Math.round(net)),
+            rendNetStr:    amount>0 ? this.fmtPct(net/amount*100,2) : '0,00 %',
+            tauxStr:       revenu>0 ? (impots/revenu*100).toFixed(0)+' %' : '0 %',
+            detail:        'IS 15 % (puis 25 %) + Flat tax 30 % sur dividendes',
+          };
+        }
+      }
+    })();
+    const fscTmiOptions = [0,11,30,41,45].map(v=>({
+      label: v===0?'0 %':v+' %',
+      bg:     fsc.tmi===v ? 'var(--accent)'      : 'var(--surface-2)',
+      fg:     fsc.tmi===v ? '#fff'                : 'var(--ink-2)',
+      border: fsc.tmi===v ? 'var(--accent)'       : 'var(--line)',
+      onClick: ()=>this.setFiscalite('tmi',v),
+    }));
+
     // Vue détail
     const isDetail = st.view !== 'synthese';
     let d = {};
@@ -1108,6 +1332,36 @@ class Component extends DCLogic {
       consolidatedNewPct,
       legacyPrintClass:  st.legacy.length === 0 ? 'legacy-print-empty' : '',
       hasLegacy:         st.legacy.length > 0,
+      companyRows, companyTotalStr, companyTotalOk, companyTotalColor,
+      companyRevenuTotalStr: this.fmtEur(Math.round(incomeAnnual)),
+      addCompany: this.addCompany,
+      fscResult, fscTmiOptions,
+      fscIsPropre: fsc.mode==='propre',
+      fscIsIS:     fsc.mode==='is',
+      fscIsCCA:    fsc.apport==='cca',
+      fscIsNum:    fsc.apport==='numeraire',
+      onFscModePropre:  ()=>this.setFiscalite('mode','propre'),
+      onFscModeIS:      ()=>this.setFiscalite('mode','is'),
+      onFscRegimeReel:  ()=>this.setFiscalite('regime','reel'),
+      onFscRegimeMicro: ()=>this.setFiscalite('regime','micro'),
+      onFscApportCCA:   ()=>this.setFiscalite('apport','cca'),
+      onFscApportNum:   ()=>this.setFiscalite('apport','numeraire'),
+      fscModePropBg:fsc.mode==='propre'?'var(--accent)':'var(--surface-2)',
+      fscModePropFg:fsc.mode==='propre'?'#fff':'var(--ink-2)',
+      fscModeISBg:  fsc.mode==='is'?'var(--accent)':'var(--surface-2)',
+      fscModeISFg:  fsc.mode==='is'?'#fff':'var(--ink-2)',
+      fscReelBg:    fsc.regime==='reel'?'var(--accent-soft)':'var(--surface-2)',
+      fscReelFg:    fsc.regime==='reel'?'var(--accent)':'var(--ink-2)',
+      fscReelBorder:fsc.regime==='reel'?'var(--accent)':'var(--line)',
+      fscMicroBg:   fsc.regime==='micro'?'var(--accent-soft)':'var(--surface-2)',
+      fscMicroFg:   fsc.regime==='micro'?'var(--accent)':'var(--ink-2)',
+      fscMicroBorder:fsc.regime==='micro'?'var(--accent)':'var(--line)',
+      fscCCABg:     fsc.apport==='cca'?'var(--accent-soft)':'var(--surface-2)',
+      fscCCAFg:     fsc.apport==='cca'?'var(--accent)':'var(--ink-2)',
+      fscCCABorder: fsc.apport==='cca'?'var(--accent)':'var(--line)',
+      fscNumBg:     fsc.apport==='numeraire'?'var(--accent-soft)':'var(--surface-2)',
+      fscNumFg:     fsc.apport==='numeraire'?'var(--accent)':'var(--ink-2)',
+      fscNumBorder: fsc.apport==='numeraire'?'var(--accent)':'var(--line)',
       closeSidebar: this.closeSidebar,
       sidebarClass:        sidebarOpen ? 'open' : '',
       sidebarOverlayClass: sidebarOpen ? 'open' : '',
