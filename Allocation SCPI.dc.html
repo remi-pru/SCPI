@@ -1672,7 +1672,7 @@ class Component extends DCLogic {
       onUndo: this.undoOptimize,
       totalStr:   Math.round(total)+' %',
       totalColor: totalOk ? 'var(--pos)' : 'var(--neg)',
-      totalNote:  totalOk ? '✓ réparti à 100 %' : 'normalisé pour le calcul',
+      totalNote:  totalOk ? 'réparti à' : 'normalisé pour le calcul',
       totalAlertDisplay:       totalOk ? 'none' : 'flex',
       isPessimistic,
       pessimisticBannerDisplay: isPessimistic ? 'flex' : 'none',
