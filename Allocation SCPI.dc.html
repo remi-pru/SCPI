@@ -123,13 +123,15 @@
     /* Sliders masqués (non rendus par les navigateurs en mode impression) */
     input[type="range"]{display:none!important;}
     /* PDF synthèse : Pondération seule en page 1, Répartition+KPI en page 2 */
-    .alloc-grid{grid-template-columns:1fr!important;}
-    .alloc-ponder{break-after:page;}
-    /* Multi-société : page 3, masqué si 1 seule société */
-    .co-table-section{break-before:page;}
+    /* display:block nécessaire : les sauts de page (break-after) sont ignorés dans un grid */
+    .alloc-grid{display:block!important;}
+    .alloc-ponder{break-after:page;page-break-after:always;}
+    /* Rentabilité nette : page 3 */
+    .renta-section{break-before:page;page-break-before:always;}
+    /* Multi-société : masqué si 1 seule société, sinon s'intègre page 2 */
     .print-hidden{display:none!important;}
     /* Patrimoine historique : nouvelle page si données présentes */
-    .legacy-section-print{break-before:page;}
+    .legacy-section-print{break-before:page;page-break-before:always;}
     /* Grilles : layout desktop sur A4 (annule les règles mobile éventuelles) */
     .bottom-grid{grid-template-columns:1fr 1fr 1fr!important;}
     .kpi-grid{grid-template-columns:repeat(5,1fr)!important;}
@@ -197,6 +199,29 @@
     .scpi-rendement{display:none!important;}
     /* Vignettes alloc-grid : empêche le contenu de dépasser la largeur de l'écran */
     .alloc-grid > div{min-width:0;overflow-x:hidden;}
+    /* Lignes SCPI : nom sur ligne 1, contrôles (%, €, parts, bouton) sur ligne 2 */
+    .scpi-row{flex-wrap:wrap;}
+    .scpi-row-name{flex:1 0 0;min-width:calc(100% - 28px);}
+    .scpi-row-controls{margin-left:auto;}
+    /* Co-table : supprime le scroll horizontal, layout carte 2 lignes par société */
+    .co-table-wrap{overflow-x:visible!important;}
+    .co-header-row,.co-data-row,.co-total-row{min-width:0!important;}
+    .co-header-row{grid-template-columns:1fr auto!important;}
+    .co-header-row>:nth-child(n+3){display:none!important;}
+    .co-data-row{
+      grid-template-columns:1fr auto 32px!important;
+      grid-template-rows:auto auto!important;
+      row-gap:3px!important;
+    }
+    .co-data-row>:nth-child(1){grid-column:1;grid-row:1;}
+    .co-data-row>:nth-child(2){grid-column:2;grid-row:1;}
+    .co-data-row>:nth-child(3){grid-column:1;grid-row:2;font-size:11px!important;text-align:left!important;}
+    .co-data-row>:nth-child(4){grid-column:2;grid-row:2;font-size:11px!important;}
+    .co-data-row>:nth-child(5){grid-column:3;grid-row:1/3;align-self:center!important;}
+    .co-total-row{grid-template-columns:1fr auto auto!important;}
+    .co-total-row>:nth-child(3){display:none!important;}
+    .co-total-row>:nth-child(4){grid-column:3!important;}
+    .co-total-row>:nth-child(5){display:none!important;}
     /* Donut : taille fluide (évite le débordement dans la card) */
     .donut-wrap{width:min(280px,calc(100% - 4px))!important;height:min(280px,calc(100% - 4px))!important;}
     .donut-wrap svg{width:100%!important;height:100%!important;}
@@ -351,28 +376,30 @@
 
               <sc-for list="{{ visibleRows }}" as="row" hint-placeholder-count="6">
                 <div style="padding:13px 0;border-bottom:1px solid var(--line-2);">
-                  <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+                  <div class="scpi-row" style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
                     <span style="width:9px;height:9px;border-radius:50%;flex:none;background:{{ row.color }};"></span>
-                    <span style="flex:1;font-size:13.5px;font-weight:500;cursor:pointer;" onClick="{{ row.onSelect }}">{{ row.name }}</span>
-                    <span class="scpi-rendement" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;">{{ row.rendementStr }}</span>
-                    <!-- Pourcentage éditable -->
-                    <span style="display:inline-flex;align-items:center;">
-                      <input type="text" value="{{ row.weightInput }}" onFocus="{{ row.onPctFocus }}" onInput="{{ row.onWeightInput }}" onBlur="{{ row.onPctBlur }}" onKeyDown="{{ row.onPctKeyDown }}" style="width:38px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);margin-left:2px;">%</span>
+                    <span class="scpi-row-name" style="flex:1;font-size:13.5px;font-weight:500;cursor:pointer;" onClick="{{ row.onSelect }}">{{ row.name }}</span>
+                    <span class="scpi-row-controls" style="display:flex;align-items:center;gap:9px;">
+                      <span class="scpi-rendement" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;">{{ row.rendementStr }}</span>
+                      <!-- Pourcentage éditable -->
+                      <span style="display:inline-flex;align-items:center;">
+                        <input type="text" value="{{ row.weightInput }}" onFocus="{{ row.onPctFocus }}" onInput="{{ row.onWeightInput }}" onBlur="{{ row.onPctBlur }}" onKeyDown="{{ row.onPctKeyDown }}" style="width:38px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);margin-left:2px;">%</span>
+                      </span>
+                      <!-- € input synchronisé -->
+                      <span style="display:inline-flex;align-items:center;margin-right:2px;">
+                        <input type="text" value="{{ row.amountEurStr }}" onFocus="{{ row.onEurFocus }}" onInput="{{ row.onAmountInput }}" onBlur="{{ row.onEurBlur }}" onKeyDown="{{ row.onEurKeyDown }}" style="width:68px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);margin-left:2px;">€</span>
+                      </span>
+                      <!-- Nombre de parts -->
+                      <sc-if value="{{ row.partsStr }}">
+                        <span style="font-size:10px;color:var(--ink-3);white-space:nowrap;font-family:'IBM Plex Mono',monospace;">{{ row.partsStr }}</span>
+                      </sc-if>
+                      <!-- Bouton masquer -->
+                      <button class="hide-scpi-btn" onClick="{{ row.onHide }}" title="Masquer cette SCPI" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:5px;background:transparent;cursor:pointer;color:var(--ink-3);flex:none;padding:0;transition:color .15s,background .15s;">
+                        <svg width="13" height="10" viewBox="0 0 14 11" fill="none"><ellipse cx="7" cy="5.5" rx="6" ry="4.5" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="5.5" r="1.9" stroke="currentColor" stroke-width="1.3"/><line x1="2" y1="1" x2="12" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                      </button>
                     </span>
-                    <!-- € input synchronisé -->
-                    <span style="display:inline-flex;align-items:center;margin-right:2px;">
-                      <input type="text" value="{{ row.amountEurStr }}" onFocus="{{ row.onEurFocus }}" onInput="{{ row.onAmountInput }}" onBlur="{{ row.onEurBlur }}" onKeyDown="{{ row.onEurKeyDown }}" style="width:68px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3);margin-left:2px;">€</span>
-                    </span>
-                    <!-- Nombre de parts -->
-                    <sc-if value="{{ row.partsStr }}">
-                      <span style="font-size:10px;color:var(--ink-3);margin-left:4px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;">{{ row.partsStr }}</span>
-                    </sc-if>
-                    <!-- Bouton masquer -->
-                    <button class="hide-scpi-btn" onClick="{{ row.onHide }}" title="Masquer cette SCPI" style="display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:5px;background:transparent;cursor:pointer;color:var(--ink-3);flex:none;padding:0;transition:color .15s,background .15s;">
-                      <svg width="13" height="10" viewBox="0 0 14 11" fill="none"><ellipse cx="7" cy="5.5" rx="6" ry="4.5" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="5.5" r="1.9" stroke="currentColor" stroke-width="1.3"/><line x1="2" y1="1" x2="12" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    </button>
                   </div>
                   <input type="range" min="0" max="60" step="1" value="{{ row.weight }}" onInput="{{ row.onInput }}" style="background:{{ row.track }};" />
                 </div>
@@ -453,8 +480,8 @@
                   </svg>
                   <!-- Label centré -->
                   <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                    <div style="font-family:'Spectral',serif;font-size:22px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
-                    <div style="font-size:11px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:7px;text-align:center;line-height:1.5;font-weight:600;">Rendement<br>moyen</div>
+                    <div style="font-family:'Spectral',serif;font-size:16px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
+                    <div style="font-size:9.5px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:4px;text-align:center;line-height:1.4;font-weight:600;">Rendement<br>moyen</div>
                   </div>
                 </div>
 
@@ -614,7 +641,7 @@
               </button>
             </div>
             <div class="co-table-wrap" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
-              <div style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:10px 20px;background:var(--surface-2);border-bottom:1px solid var(--line);min-width:500px;">
+              <div class="co-header-row" style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:10px 20px;background:var(--surface-2);border-bottom:1px solid var(--line);min-width:500px;">
                 <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">Structure</span>
                 <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:right;">Répartition</span>
                 <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:right;">Capital investi</span>
@@ -622,7 +649,7 @@
                 <span></span>
               </div>
               <sc-for list="{{ companyRows }}" as="co" hint-placeholder-count="1">
-                <div style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:11px 20px;border-bottom:1px solid var(--line-2);align-items:center;min-width:500px;">
+                <div class="co-data-row" style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:11px 20px;border-bottom:1px solid var(--line-2);align-items:center;min-width:500px;">
                   <input type="text" value="{{ co.name }}" onInput="{{ co.onNameInput }}" style="font-size:13px;color:var(--ink);border:none;background:transparent;outline:none;font-family:inherit;width:100%;padding-right:12px;" />
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:2px;">
                     <input type="text" value="{{ co.pct }}" onFocus="this.select()" onInput="{{ co.onPctInput }}" style="width:36px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);border:none;background:transparent;outline:none;text-align:right;padding:0;" />
@@ -635,7 +662,7 @@
                   </button>
                 </div>
               </sc-for>
-              <div style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:12px 20px;background:var(--surface-2);align-items:center;min-width:500px;">
+              <div class="co-total-row" style="display:grid;grid-template-columns:1fr 90px 150px 150px 40px;padding:12px 20px;background:var(--surface-2);align-items:center;min-width:500px;">
                 <span style="font-size:13px;font-weight:700;color:var(--ink);">Total</span>
                 <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:{{ companyTotalColor }};text-align:right;">{{ companyTotalStr }}</span>
                 <span></span>
@@ -646,7 +673,7 @@
           </div>
 
           <!-- Rentabilité nette après impôt -->
-          <div style="margin-top:28px;">
+          <div class="renta-section" style="margin-top:28px;">
             <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);">
               <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 22px;">Rentabilité nette après impôt</h2>
 
