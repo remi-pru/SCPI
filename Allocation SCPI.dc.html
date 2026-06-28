@@ -132,16 +132,17 @@
     .print-hidden{display:none!important;}
     /* Patrimoine historique : nouvelle page si données présentes */
     .legacy-section-print{break-before:page;page-break-before:always;padding-top:45px!important;}
-    /* Marge en haut de page 2 (Répartition) : margin-top pour espace AU-DESSUS de la vignette */
-    .alloc-repart{margin-top:45px!important;}
+    /* Marge en haut de page 2 (Répartition) + padding réduit pour laisser plus de place au donut */
+    .alloc-repart{margin-top:45px!important;padding:10px 14px!important;}
+    .alloc-repart h2{margin-bottom:4px!important;}
     /* Grilles : layout desktop sur A4 (annule les règles mobile éventuelles) */
     /* Marge en haut de page 3 (revenu / géo / sectoriel) — padding-top car margin-top est ignoré en début de page */
     .bottom-grid{grid-template-columns:1fr 1fr 1fr!important;padding-top:45px!important;}
     .kpi-grid{grid-template-columns:repeat(3,1fr)!important;}
     .detail-geo-grid{grid-template-columns:1fr 1fr!important;}
-    /* Donut : taille réduite pour tenir sur A4 sans déborder */
-    .donut-wrap{width:220px!important;height:220px!important;}
-    .donut-wrap svg{width:220px!important;height:220px!important;}
+    /* Donut : agrandi pour le PDF (la vignette est pleine largeur page 2) */
+    .donut-wrap{width:380px!important;height:380px!important;}
+    .donut-wrap svg{width:380px!important;height:380px!important;}
     /* Revenu card : préserver le dégradé sombre en PDF couleur */
     .income-card{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     /* Tables : enlève le min-width fixe pour éviter les débordements sur A4 */
