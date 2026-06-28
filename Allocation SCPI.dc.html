@@ -361,6 +361,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-2);">
                   <span style="font-size:12.5px;color:var(--ink-2);">Montant non investi<span style="font-size:11px;color:var(--ink-3);margin-left:8px;">(budget - achats entiers de parts)</span></span>
                   <span style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                    <sc-if value="{{ showUndo }}"><button onClick="{{ onUndo }}" title="Revenir à l'allocation avant optimisation" style="padding:3px 10px;font-size:11px;font-family:inherit;font-weight:600;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;cursor:pointer;white-space:nowrap;">↩ Retour</button></sc-if>
                     <button onClick="{{ onOptimize }}" title="Minimiser le montant non investi par achat de parts supplémentaires et échanges optimisés" style="padding:3px 10px;font-size:11px;font-family:inherit;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent);border-radius:7px;cursor:pointer;white-space:nowrap;">Optimiser</button>
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:{{ unallocatedColor }};font-variant-numeric:tabular-nums;">{{ unallocatedStr }}</span>
                   </span>
@@ -986,6 +987,7 @@ class Component extends DCLogic {
       }
       return w;
     })(),
+    prevWeights: null,
     pessimistic: false,
     sidebarOpen: false,
     hiddenScpis: {},
@@ -1222,8 +1224,9 @@ class Component extends DCLogic {
     // Vérification : annuler si le montant non investi après optimisation n'est pas inférieur au montant initial
     if (computeUnalloc(newWeights) >= computeUnalloc(w)) return;
 
-    this.setState({ weights: newWeights });
+    this.setState({ weights: newWeights, prevWeights: w });
   };
+  undoOptimize = () => this.setState(s => s.prevWeights ? { weights: s.prevWeights, prevWeights: null } : null);
   addLegacy    = () => this.setState(s=>({legacy:[...s.legacy,{name:'',manager:'',amount:''}]}));
   removeLegacy = (i) => this.setState(s=>({legacy:s.legacy.filter((_,j)=>j!==i)}));
   updateLegacy = (i,field,val) => this.setState(s=>{
@@ -1597,6 +1600,8 @@ class Component extends DCLogic {
       incomeBreakdown,
       unallocatedStr, unallocatedColor, showUnallocated: amount > 0,
       onOptimize: () => this.optimizeAllocation(),
+      showUndo: !!st.prevWeights,
+      onUndo: this.undoOptimize,
       totalStr:   Math.round(total)+' %',
       totalColor: totalOk ? 'var(--pos)' : 'var(--neg)',
       totalNote:  totalOk ? '✓ réparti à 100 %' : 'normalisé pour le calcul',
