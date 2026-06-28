@@ -143,6 +143,9 @@
     /* Donut : agrandi pour le PDF (la vignette est pleine largeur page 2) */
     .donut-wrap{width:380px!important;height:380px!important;}
     .donut-wrap svg{width:380px!important;height:380px!important;}
+    /* Texte central : police proportionnelle au donut agrandi (380 vs 320 écran) */
+    .donut-label-val{font-size:24px!important;}
+    .donut-label-sub{font-size:13px!important;margin-top:6px!important;}
     /* Revenu card : préserver le dégradé sombre en PDF couleur */
     .income-card{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     /* Tables : enlève le min-width fixe pour éviter les débordements sur A4 */
@@ -484,8 +487,8 @@
                   </svg>
                   <!-- Label centré -->
                   <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                    <div style="font-family:'Spectral',serif;font-size:16px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
-                    <div style="font-size:9.5px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:4px;text-align:center;line-height:1.4;font-weight:600;">Rendement<br>moyen</div>
+                    <div class="donut-label-val" style="font-family:'Spectral',serif;font-size:16px;font-weight:500;line-height:1;color:var(--ink);">{{ avgRendementStr }}</div>
+                    <div class="donut-label-sub" style="font-size:9.5px;color:var(--ink-3);letter-spacing:0.04em;text-transform:uppercase;margin-top:4px;text-align:center;line-height:1.4;font-weight:600;">Rendement<br>moyen</div>
                   </div>
                 </div>
 
