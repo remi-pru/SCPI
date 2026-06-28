@@ -965,7 +965,27 @@ class Component extends DCLogic {
     view: 'synthese',
     theme: 'light',
     amount: null,
-    weights: {...DEFAULT_WEIGHTS},
+    weights: (() => {
+      // Poids initiaux calculés à partir de parts ENTIÈRES pour le montant par défaut (100 000 €).
+      // Évite d'afficher des pourcentages qui correspondraient à des fractions de parts.
+      const amount = 100000;
+      const defTotal = Object.values(DEFAULT_WEIGHTS).reduce((s,v) => s+v, 0) || 100;
+      const parts = {};
+      let tc = 0;
+      for (const s of SCPI) {
+        if (!s.prix) { parts[s.id] = 0; continue; }
+        const n = Math.floor(amount * (DEFAULT_WEIGHTS[s.id] || 0) / defTotal / s.prix);
+        parts[s.id] = n;
+        tc += n * s.prix;
+      }
+      const w = {};
+      for (const s of SCPI) {
+        w[s.id] = tc > 0 && s.prix
+          ? Math.round(parts[s.id] * s.prix / tc * 10000) / 100
+          : (DEFAULT_WEIGHTS[s.id] || 0);
+      }
+      return w;
+    })(),
     pessimistic: false,
     sidebarOpen: false,
     hiddenScpis: {},
@@ -992,13 +1012,28 @@ class Component extends DCLogic {
   setWeight     = (id,val) => this.setState(s=>({weights:{...s.weights,[id]:val}}));
   setAmount     = (val) => this.setState({amount: isNaN(val)?0:val});
   equalize      = () => {
-    const visible = SCPI.filter(s=>!this.state.hiddenScpis[s.id]);
-    if(!visible.length) return;
-    const base = Math.floor(100/visible.length);
-    const rem  = 100 - base * visible.length;
-    const w = {...this.state.weights};
-    visible.forEach((s,i) => w[s.id] = base + (i < rem ? 1 : 0));
-    this.setState({weights:w});
+    const st      = this.state;
+    const amount  = st.amount == null ? (this.props.defaultAmount ?? 100000) : st.amount;
+    const visible = SCPI.filter(s => !st.hiddenScpis[s.id] && s.prix > 0);
+    if (!visible.length || !amount) return;
+    // Budget cible identique pour chaque SCPI (équipondération brute)
+    const budgetParScpi = amount / visible.length;
+    // Parts entières achetables dans ce budget
+    const parts = {};
+    let tc = 0;
+    for (const s of visible) {
+      const n = Math.floor(budgetParScpi / s.prix);
+      parts[s.id] = n;
+      tc += n * s.prix;
+    }
+    // Poids réels en % de l'investi (la somme ≈ 100 %, sans fraction de parts)
+    const w = {...st.weights};
+    for (const s of visible) {
+      w[s.id] = tc > 0
+        ? Math.round(parts[s.id] * s.prix / tc * 10000) / 100
+        : (100 / visible.length);
+    }
+    this.setState({weights: w});
   };
   reset = () => {
     const st     = this.state;
