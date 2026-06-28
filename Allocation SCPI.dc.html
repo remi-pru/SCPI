@@ -1101,21 +1101,20 @@ class Component extends DCLogic {
       return b;
     };
 
-    // Greedy fill : part la plus chère qui rentre, dans la limite n_max
+    // Greedy fill : achète en une passe le maximum de parts de chaque SCPI
+    // (ordre décroissant de prix), dans la limite n_max
     const greedyFill = (p, rem, b) => {
       const r = Object.assign({}, p);
       let cash = rem;
-      const sorted = [...visibleScpi].sort((a, b) => b.prix - a.prix);
-      let ok = true;
-      while (ok) {
-        ok = false;
-        for (const s of sorted) {
-          if (cash + 1e-9 >= s.prix && r[s.id] < b[s.id].max) {
-            r[s.id]++;
-            cash -= s.prix;
-            ok = true;
-            break;
-          }
+      const sorted = [...visibleScpi].sort((x, y) => y.prix - x.prix);
+      for (const s of sorted) {
+        const canBuy = Math.min(
+          Math.floor((cash + 1e-9) / s.prix),
+          Math.max(0, b[s.id].max - r[s.id])
+        );
+        if (canBuy > 0) {
+          r[s.id] += canBuy;
+          cash -= canBuy * s.prix;
         }
       }
       return { p: r, rem: cash };
@@ -1147,25 +1146,25 @@ class Component extends DCLogic {
           }
         }
 
-        // Phase B : vendre (k1,k2) parts de 2 SCPIs differentes (k=1..3)
-        for (let a = 0; a < visibleScpi.length; a++) {
-          const sA = visibleScpi[a];
-          const maxKA = Math.min(cur.p[sA.id] - b[sA.id].min, 3);
-          if (maxKA < 1) continue;
-          for (let bx = a + 1; bx < visibleScpi.length; bx++) {
-            const sB = visibleScpi[bx];
-            const maxKB = Math.min(cur.p[sB.id] - b[sB.id].min, 3);
-            if (maxKB < 1) continue;
-            for (let ka = 1; ka <= maxKA; ka++) {
-              for (let kb = 1; kb <= maxKB; kb++) {
-                const tmp = Object.assign({}, cur.p,
-                  { [sA.id]: cur.p[sA.id] - ka, [sB.id]: cur.p[sB.id] - kb });
-                const trial = greedyFill(tmp, cur.rem + ka * sA.prix + kb * sB.prix, b);
+        // Phase B : vendre k parts de 2..N SCPIs simultanément (k=1..3 par SCPI)
+        // Énumération récursive de tous les sous-ensembles de taille ≥ 2
+        const tryMultiSell = (startIdx, tmpParts, cashFreed, subsetSize) => {
+          for (let i = startIdx; i < visibleScpi.length; i++) {
+            const s = visibleScpi[i];
+            const maxK = Math.min(tmpParts[s.id] - b[s.id].min, 3);
+            if (maxK < 1) continue;
+            for (let k = 1; k <= maxK; k++) {
+              const nextParts = Object.assign({}, tmpParts, { [s.id]: tmpParts[s.id] - k });
+              const nextCash  = cashFreed + k * s.prix;
+              if (subsetSize >= 1) { // au moins 2 SCPIs au total
+                const trial = greedyFill(nextParts, cur.rem + nextCash, b);
                 if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
               }
+              tryMultiSell(i + 1, nextParts, nextCash, subsetSize + 1);
             }
           }
-        }
+        };
+        tryMultiSell(0, cur.p, 0, 0);
 
         if (!bestState) break;
         cur = bestState;
