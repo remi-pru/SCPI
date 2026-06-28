@@ -97,7 +97,7 @@
     .sidebar{display:none!important;}
     .sidebar-overlay{display:none!important;}
     .app-wrap{display:block!important;}
-    main{padding:20px 24px!important;}
+    main{padding:32px 24px 20px!important;}
     body{background:#fff!important;}
     /* Patrimoine historique : masqué en PDF si aucune ligne saisie */
     .legacy-print-empty{display:none!important;margin:0!important;padding:0!important;}
@@ -127,14 +127,16 @@
     .alloc-grid{display:block!important;}
     .alloc-ponder{break-after:page;page-break-after:always;}
     /* Rentabilité nette : page 3 */
-    .renta-section{break-before:page;page-break-before:always;}
+    .renta-section{break-before:page;page-break-before:always;padding-top:32px!important;}
     /* Multi-société : masqué si 1 seule société, sinon s'intègre page 2 */
     .print-hidden{display:none!important;}
     /* Patrimoine historique : nouvelle page si données présentes */
-    .legacy-section-print{break-before:page;page-break-before:always;}
+    .legacy-section-print{break-before:page;page-break-before:always;padding-top:32px!important;}
+    /* Marge en haut de page 2 (Répartition) */
+    .alloc-repart{padding-top:32px!important;}
     /* Grilles : layout desktop sur A4 (annule les règles mobile éventuelles) */
     .bottom-grid{grid-template-columns:1fr 1fr 1fr!important;}
-    .kpi-grid{grid-template-columns:repeat(5,1fr)!important;}
+    .kpi-grid{grid-template-columns:repeat(3,1fr)!important;}
     .detail-geo-grid{grid-template-columns:1fr 1fr!important;}
     /* Donut : taille réduite pour tenir sur A4 sans déborder */
     .donut-wrap{width:220px!important;height:220px!important;}
@@ -442,7 +444,7 @@
             </div>
 
             <!-- Donut SVG + légende -->
-            <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);">
+            <div class="alloc-repart" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);">
               <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 10px;">Répartition</h2>
               <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
 
