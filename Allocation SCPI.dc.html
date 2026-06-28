@@ -927,7 +927,7 @@ const SCPI = [
   },
   {
     id:'sofi', name:'Sofidynamic', manager:'Sofidy', color:'#cf6a47',
-    rendement:9.04, pga:14.04, tof:97.48, decote:-6.46, ltv:19.90, walb:'n.c. (fonds récent)', ran:'14,72 € / part', prix:315, vr:336.75,
+    rendement:9.04, pga:14.04, tof:97.48, decote:-6.46, ltv:19.90, walb:'n.c. (fonds récent)', ran:'14,72 € / part', prix:320, vr:336.75,
     sri:4, costs:{entree:2.40,sortie:6.00,sortieNote:'si sortie avant 8 ans (sinon 0 %)',gestion:1.05,transaction:5.34},
     tagline:'Le moteur de rendement « high yield » de l’allocation, avec un TD brut de plus de 9 %.',
     geo:[{name:'Pays-Bas',pct:46.6},{name:'France - Province',pct:53.4}],
@@ -936,7 +936,7 @@ const SCPI = [
     sections:[
       {title:'Secteurs & typologie',body:'Stratégie « high yield » opportuniste. 46,6 % du patrimoine aux Pays-Bas, complété par 53,4 % en France (dont 26,6 % en régions). Investissement ciblé sur les commerces périphériques et urbains.'},
       {title:'Gestion locative (TOF & baux)',body:'Malgré le caractère « high yield » de la stratégie, le taux d’occupation financier est très performant à 97,48 %.'},
-      {title:'Rendement & performance',body:'Moteur de rendement de l’allocation avec un TD brut de 9,04 %. Le prix de part a augmenté de 5 % en janvier 2025, établissant une PGA impressionnante de 14,04 %. Le prix de 315 € présente une décote de –6,46 % sur la VR (336,75 €).'},
+      {title:'Rendement & performance',body:'Moteur de rendement de l’allocation avec un TD brut de 9,04 %. Le prix de part a augmenté de 5 % en janvier 2025, établissant une PGA impressionnante de 14,04 %. Le prix de 320 € présente une décote de –6,46 % sur la VR (336,75 €).'},
       {title:'Endettement & RAN',body:'Endettement maîtrisé mais supérieur aux autres à 19,90 % (effet de levier optimisé). Report à nouveau confortable de 14,72 € / part.'}
     ]
   }
@@ -1200,14 +1200,27 @@ class Component extends DCLogic {
     for (const s of visibleScpi)
       newWeights[s.id] = tc > 0 ? Math.round((best.p[s.id] || 0) * s.prix / tc * 10000) / 100 : w[s.id];
 
-    // Vérification : annuler si le montant non investi après optimisation n'est pas inférieur au montant initial
-    // (même formule que l'UI : floor des parts depuis les poids normalisés)
+    // Top-up : acheter des parts de la SCPI la moins chère pour descendre le reliquat en dessous de son prix de part
     const computeUnalloc = (weights) => {
       const wTotal = visibleScpi.reduce((a, s) => a + (weights[s.id] || 0), 0);
       if (wTotal <= 0) return amount;
       return Math.max(0, amount - visibleScpi.reduce((sum, s) =>
         sum + Math.floor(amount * (weights[s.id] || 0) / wTotal / s.prix) * s.prix, 0));
     };
+    const cheapest = visibleScpi.reduce((a, s) => s.prix < a.prix ? s : a);
+    const wTotalNew = visibleScpi.reduce((a, s) => a + (newWeights[s.id] || 0), 0);
+    const topUpParts = {};
+    for (const s of visibleScpi)
+      topUpParts[s.id] = wTotalNew > 0 ? Math.floor(amount * (newWeights[s.id] || 0) / wTotalNew / s.prix) : 0;
+    const extra = Math.floor((amount - totalCost(topUpParts)) / cheapest.prix);
+    if (extra > 0) {
+      topUpParts[cheapest.id] += extra;
+      const tcTopUp = totalCost(topUpParts);
+      for (const s of visibleScpi)
+        newWeights[s.id] = tcTopUp > 0 ? Math.round((topUpParts[s.id] || 0) * s.prix / tcTopUp * 10000) / 100 : newWeights[s.id];
+    }
+
+    // Vérification : annuler si le montant non investi après optimisation n'est pas inférieur au montant initial
     if (computeUnalloc(newWeights) >= computeUnalloc(w)) return;
 
     this.setState({ weights: newWeights });
