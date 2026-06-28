@@ -104,6 +104,7 @@
     /* Éviter les coupures à l'intérieur des blocs */
     .kpi-card{break-inside:avoid;}
     .alloc-grid > div{break-inside:avoid;}
+    .bottom-grid{break-inside:avoid;}
     .bottom-grid > div{break-inside:avoid;}
     .kpi-grid{break-inside:avoid;}
     .synth-header{break-inside:avoid;}
@@ -113,11 +114,27 @@
     .detail-sections > div{break-inside:avoid;}
     .costs-block{break-inside:avoid;}
     .fsc-results > div{break-inside:avoid;}
+    .income-card{break-inside:avoid;}
+    .detail-hero-body{break-inside:avoid;}
     /* SCPI detail : hero + métriques sur la même page */
     .detail-hero{break-after:avoid;}
     .detail-metrics{break-before:avoid;}
     /* Montant à investir : restaure 30px sur mobile (> 16px = pas de zoom) */
     input.main-amount-input{font-size:30px!important;}
+    /* Sliders masqués (non rendus par les navigateurs en mode impression) */
+    input[type="range"]{display:none!important;}
+    /* Grilles : maintenir le layout desktop sur A4 (annule les règles mobile éventuelles) */
+    .alloc-grid{grid-template-columns:1.2fr 1fr!important;}
+    .bottom-grid{grid-template-columns:1fr 1fr 1fr!important;}
+    .kpi-grid{grid-template-columns:repeat(5,1fr)!important;}
+    .detail-geo-grid{grid-template-columns:1fr 1fr!important;}
+    /* Donut : taille réduite pour tenir sur A4 sans déborder */
+    .donut-wrap{width:220px!important;height:220px!important;}
+    .donut-wrap svg{width:220px!important;height:220px!important;}
+    /* Revenu card : préserver le dégradé sombre en PDF couleur */
+    .income-card{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    /* Tables : enlève le min-width fixe pour éviter les débordements sur A4 */
+    .co-table-wrap{overflow:visible!important;}
     [data-theme="dark"]{
       --bg:#fff;--surface:#fff;--surface-2:#f5f5f5;--surface-3:#ebebeb;
       --ink:#000;--ink-2:#333;--ink-3:#666;--line:#ccc;--line-2:#e5e5e5;
@@ -170,6 +187,17 @@
     input[type="text"],input[type="number"]{font-size:16px!important;}
     /* Montant à investir : conserve sa grande taille (30px > 16px, pas de zoom) */
     input.main-amount-input{font-size:30px!important;}
+    /* Donut : taille fluide (évite le débordement dans la card) */
+    .donut-wrap{width:min(280px,calc(100% - 4px))!important;height:min(280px,calc(100% - 4px))!important;}
+    .donut-wrap svg{width:100%!important;height:100%!important;}
+    /* Revenu estimé : chiffre lisible sans débordement */
+    .income-value{font-size:36px!important;}
+    /* Detail SCPI hero : padding réduit + layout colonne sur petit écran */
+    .detail-hero{padding:24px 20px!important;}
+    .detail-h1{font-size:28px!important;letter-spacing:-0.015em!important;}
+    .detail-hero-body{flex-direction:column!important;gap:16px!important;}
+    .detail-hero-rate{text-align:left!important;}
+    .detail-rate{font-size:44px!important;}
   }
   @media(min-width:821px){
     .burger-btn{display:none!important;}
@@ -382,7 +410,7 @@
               <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
 
                 <!-- SVG Donut centré -->
-                <div style="position:relative;width:320px;height:320px;flex:none;">
+                <div class="donut-wrap" style="position:relative;width:320px;height:320px;flex:none;">
                   <svg width="320" height="320" viewBox="0 0 100 100">
                     <!-- Track -->
                     <circle cx="50" cy="50" r="20" fill="none" stroke="var(--surface-3)" stroke-width="8"/>
@@ -449,10 +477,10 @@
           <div class="bottom-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;">
 
             <!-- Carte revenu estimé -->
-            <div style="background:linear-gradient(148deg,#0a2540 0%,#163d6a 100%);border-radius:16px;padding:28px;color:#fff;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;">
+            <div class="income-card" style="background:linear-gradient(148deg,#0a2540 0%,#163d6a 100%);border-radius:16px;padding:28px;color:#fff;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;">
               <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
               <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;opacity:.62;font-weight:700;margin-bottom:16px;">Revenu estimé</div>
-              <div style="font-family:'Spectral',serif;font-size:52px;font-weight:500;line-height:1;letter-spacing:-0.02em;">{{ incomeAnnualStr }}</div>
+              <div class="income-value" style="font-family:'Spectral',serif;font-size:52px;font-weight:500;line-height:1;letter-spacing:-0.02em;">{{ incomeAnnualStr }}</div>
               <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;opacity:.55;margin-top:6px;font-weight:700;">Par an</div>
               <div style="font-size:13px;opacity:.5;margin-top:3px;">soit {{ incomeMonthlyStr }} / mois</div>
               <div style="display:{{ pessimisticDiffDisplay }};font-size:12px;color:#e07a5f;margin-top:8px;align-items:center;gap:5px;">
@@ -732,18 +760,18 @@
           <!-- Hero header -->
           <div class="detail-hero" style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:36px 40px;box-shadow:var(--shadow-lg);margin-bottom:22px;position:relative;overflow:hidden;">
             <div style="position:absolute;top:0;left:0;width:6px;height:100%;background:{{ d.color }};"></div>
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;">
+            <div class="detail-hero-body" style="display:flex;align-items:flex-start;justify-content:space-between;gap:32px;flex-wrap:wrap;">
               <div style="flex:1;min-width:260px;">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
                   <span style="width:10px;height:10px;border-radius:50%;background:{{ d.color }};box-shadow:0 0 0 4px {{ d.colorSoft }};"></span>
                   <span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">{{ d.manager }}</span>
                 </div>
-                <h1 style="font-family:'Spectral',serif;font-size:42px;font-weight:500;letter-spacing:-0.022em;line-height:1.05;margin:0;">{{ d.name }}</h1>
+                <h1 class="detail-h1" style="font-family:'Spectral',serif;font-size:42px;font-weight:500;letter-spacing:-0.022em;line-height:1.05;margin:0;">{{ d.name }}</h1>
                 <p style="font-size:14.5px;color:var(--ink-2);margin:16px 0 0;max-width:500px;line-height:1.63;">{{ d.tagline }}</p>
               </div>
-              <div style="text-align:right;">
+              <div class="detail-hero-rate" style="text-align:right;">
                 <div style="font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700;">Taux de distribution 2025</div>
-                <div style="font-family:'Spectral',serif;font-size:64px;font-weight:400;line-height:1;margin-top:8px;color:{{ d.color }};letter-spacing:-0.02em;">{{ d.rendementStr }}</div>
+                <div class="detail-rate" style="font-family:'Spectral',serif;font-size:64px;font-weight:400;line-height:1;margin-top:8px;color:{{ d.color }};letter-spacing:-0.02em;">{{ d.rendementStr }}</div>
               </div>
             </div>
           </div>
