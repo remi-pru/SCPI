@@ -1050,33 +1050,24 @@ class Component extends DCLogic {
     const hiddenScpis = st.hiddenScpis || {};
     const visibleScpi = SCPI.filter(s => !hiddenScpis[s.id] && s.prix > 0);
     if (!visibleScpi.length) return;
-    const w     = st.weights;
-    const total = visibleScpi.reduce((a, s) => a + (w[s.id] || 0), 0);
-    const norm  = id => total > 0 ? (w[id] || 0) / total : 0;
-
-    // Bornes ±2 points de % absolus par SCPI
-    // Garantit : |n_i * prix_i / amount * 100 - target%_i| ≤ 2
-    const bounds = {};
-    for (const s of visibleScpi) {
-      const tgt = norm(s.id);
-      bounds[s.id] = {
-        min: Math.max(0, Math.ceil(amount * Math.max(0, tgt - 0.02) / s.prix - 1e-9)),
-        max: Math.floor(amount * (tgt + 0.02) / s.prix + 1e-9),
-      };
-    }
-
-    // Allocation initiale : plancher SANS epsilon
-    // Math.floor(x) ≤ x → sum(parts*prix) ≤ sum(amount*norm) = amount, garanti
-    let parts = {};
-    for (const s of visibleScpi)
-      parts[s.id] = Math.max(bounds[s.id].min,
-                    Math.min(bounds[s.id].max,
-                    Math.floor(amount * norm(s.id) / s.prix)));
 
     const totalCost = p => visibleScpi.reduce((sum, s) => sum + (p[s.id] || 0) * s.prix, 0);
 
+    // Bornes ±2 pp absolus depuis une fonction de normalisation
+    const makeBounds = normFn => {
+      const b = {};
+      for (const s of visibleScpi) {
+        const tgt = normFn(s.id);
+        b[s.id] = {
+          min: Math.max(0, Math.ceil(amount * Math.max(0, tgt - 0.02) / s.prix - 1e-9)),
+          max: Math.floor(amount * (tgt + 0.02) / s.prix + 1e-9),
+        };
+      }
+      return b;
+    };
+
     // Greedy fill : part la plus chère qui rentre, dans la limite n_max
-    const greedyFill = (p, rem) => {
+    const greedyFill = (p, rem, b) => {
       const r = Object.assign({}, p);
       let cash = rem;
       const sorted = [...visibleScpi].sort((a, b) => b.prix - a.prix);
@@ -1084,7 +1075,7 @@ class Component extends DCLogic {
       while (ok) {
         ok = false;
         for (const s of sorted) {
-          if (cash + 1e-9 >= s.prix && r[s.id] < bounds[s.id].max) {
+          if (cash + 1e-9 >= s.prix && r[s.id] < b[s.id].max) {
             r[s.id]++;
             cash -= s.prix;
             ok = true;
@@ -1095,52 +1086,84 @@ class Component extends DCLogic {
       return { p: r, rem: cash };
     };
 
-    let cur = greedyFill(parts, amount - totalCost(parts));
+    // Une passe : allocation initiale + 100 itérations de ventes optimisées
+    const runPass = normFn => {
+      const b = makeBounds(normFn);
 
-    // Optimisation : ventes contraintes ±2 %, jusqu'à 100 itérations
-    for (let iter = 0; iter < 100; iter++) {
-      let bestRem = cur.rem;
-      let bestState = null;
+      let parts = {};
+      for (const s of visibleScpi)
+        parts[s.id] = Math.max(b[s.id].min,
+                      Math.min(b[s.id].max,
+                      Math.floor(amount * normFn(s.id) / s.prix)));
 
-      // Phase A : vendre k parts d'1 SCPI (k=1..5), en restant >= n_min
-      for (const sell of visibleScpi) {
-        const maxK = Math.min(cur.p[sell.id] - bounds[sell.id].min, 5);
-        for (let k = 1; k <= maxK; k++) {
-          const tmp = Object.assign({}, cur.p, { [sell.id]: cur.p[sell.id] - k });
-          const trial = greedyFill(tmp, cur.rem + k * sell.prix);
-          if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
+      let cur = greedyFill(parts, amount - totalCost(parts), b);
+
+      for (let iter = 0; iter < 100; iter++) {
+        let bestRem = cur.rem;
+        let bestState = null;
+
+        // Phase A : vendre k parts d'1 SCPI (k=1..5), en restant >= n_min
+        for (const sell of visibleScpi) {
+          const maxK = Math.min(cur.p[sell.id] - b[sell.id].min, 5);
+          for (let k = 1; k <= maxK; k++) {
+            const tmp = Object.assign({}, cur.p, { [sell.id]: cur.p[sell.id] - k });
+            const trial = greedyFill(tmp, cur.rem + k * sell.prix, b);
+            if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
+          }
         }
-      }
 
-      // Phase B : vendre (k1,k2) parts de 2 SCPIs differentes (k=1..3)
-      for (let a = 0; a < visibleScpi.length; a++) {
-        const sA = visibleScpi[a];
-        const maxKA = Math.min(cur.p[sA.id] - bounds[sA.id].min, 3);
-        if (maxKA < 1) continue;
-        for (let b = a + 1; b < visibleScpi.length; b++) {
-          const sB = visibleScpi[b];
-          const maxKB = Math.min(cur.p[sB.id] - bounds[sB.id].min, 3);
-          if (maxKB < 1) continue;
-          for (let ka = 1; ka <= maxKA; ka++) {
-            for (let kb = 1; kb <= maxKB; kb++) {
-              const tmp = Object.assign({}, cur.p,
-                { [sA.id]: cur.p[sA.id] - ka, [sB.id]: cur.p[sB.id] - kb });
-              const trial = greedyFill(tmp, cur.rem + ka * sA.prix + kb * sB.prix);
-              if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
+        // Phase B : vendre (k1,k2) parts de 2 SCPIs differentes (k=1..3)
+        for (let a = 0; a < visibleScpi.length; a++) {
+          const sA = visibleScpi[a];
+          const maxKA = Math.min(cur.p[sA.id] - b[sA.id].min, 3);
+          if (maxKA < 1) continue;
+          for (let bx = a + 1; bx < visibleScpi.length; bx++) {
+            const sB = visibleScpi[bx];
+            const maxKB = Math.min(cur.p[sB.id] - b[sB.id].min, 3);
+            if (maxKB < 1) continue;
+            for (let ka = 1; ka <= maxKA; ka++) {
+              for (let kb = 1; kb <= maxKB; kb++) {
+                const tmp = Object.assign({}, cur.p,
+                  { [sA.id]: cur.p[sA.id] - ka, [sB.id]: cur.p[sB.id] - kb });
+                const trial = greedyFill(tmp, cur.rem + ka * sA.prix + kb * sB.prix, b);
+                if (trial.rem < bestRem - 1e-9) { bestRem = trial.rem; bestState = trial; }
+              }
             }
           }
         }
-      }
 
-      if (!bestState) break;
-      cur = bestState;
+        if (!bestState) break;
+        cur = bestState;
+      }
+      return cur;
+    };
+
+    // Passe 0 : bornes depuis les poids en cours
+    const w     = st.weights;
+    const total = visibleScpi.reduce((a, s) => a + (w[s.id] || 0), 0);
+    let normFn  = id => total > 0 ? (w[id] || 0) / total : 0;
+
+    let best = runPass(normFn);
+
+    // Passes 1-3 : bornes re-centrées sur l'allocation obtenue
+    for (let pass = 1; pass < 4; pass++) {
+      const tc = totalCost(best.p);
+      if (tc <= 0 || best.rem < 1e-6) break;
+      const prevRem = best.rem;
+      // Prix dans un objet pour éviter find() dans la closure
+      const prixMap = {};
+      for (const s of visibleScpi) prixMap[s.id] = s.prix;
+      normFn = id => (best.p[id] || 0) * (prixMap[id] || 0) / tc;
+      const next = runPass(normFn);
+      if (next.rem >= prevRem - 1e-9) break;
+      best = next;
     }
 
     // Recalcul des poids en % de l'investi reel (sum ~= 100)
-    const tc = totalCost(cur.p);
+    const tc = totalCost(best.p);
     const newWeights = Object.assign({}, w);
     for (const s of visibleScpi)
-      newWeights[s.id] = tc > 0 ? Math.round((cur.p[s.id] || 0) * s.prix / tc * 10000) / 100 : w[s.id];
+      newWeights[s.id] = tc > 0 ? Math.round((best.p[s.id] || 0) * s.prix / tc * 10000) / 100 : w[s.id];
     this.setState({ weights: newWeights });
   };
   addLegacy    = () => this.setState(s=>({legacy:[...s.legacy,{name:'',manager:'',amount:''}]}));

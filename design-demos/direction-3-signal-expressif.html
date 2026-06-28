@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction 3 — Signal Expressif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,200;0,300;0,400;0,500;1,200;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:#F5F4F0;color:#0F0E0B;min-height:100vh;display:flex;-webkit-font-smoothing:antialiased}
+
+:root{
+  --cream:#F5F4F0;
+  --white:#FEFEFE;
+  --ink:#0F0E0B;
+  --ink-2:#5C5A54;
+  --ink-3:#A8A49C;
+  --sidebar-bg:#0D1B2E;
+  --sidebar-accent:#E87040;
+  --sidebar-border:rgba(255,255,255,0.08);
+  --orange:#E87040;
+  --orange-soft:rgba(232,112,64,0.1);
+  --border:#E0DDD6;
+  --surface:#FEFEFE;
+}
+
+/* SIDEBAR — dark expressive */
+.sidebar{
+  width:260px;flex:none;
+  background:var(--sidebar-bg);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow:hidden;
+}
+.sb-header{
+  padding:28px 22px 22px;
+  border-bottom:1px solid var(--sidebar-border);
+}
+.sb-logo-ring{
+  width:40px;height:40px;margin-bottom:16px;
+  position:relative;
+}
+.sb-logo-ring svg{position:absolute;inset:0}
+.sb-title{
+  font-family:'Spectral',serif;
+  font-size:17px;font-weight:300;color:#FEFEFE;
+  letter-spacing:-0.01em;line-height:1.2;
+}
+.sb-title strong{font-weight:500;font-style:italic;color:var(--sidebar-accent)}
+.sb-date{
+  font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+  color:rgba(255,255,255,0.3);margin-top:5px;font-weight:600;
+}
+
+.sb-nav{padding:20px 14px;flex:1;overflow-y:auto}
+.sb-section{
+  font-size:8px;letter-spacing:0.22em;text-transform:uppercase;
+  color:rgba(255,255,255,0.25);padding:0 8px;margin-bottom:8px;margin-top:16px;font-weight:700;
+}
+.sb-section:first-child{margin-top:0}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:6px;cursor:pointer;
+  margin-bottom:1px;transition:background .12s;
+}
+.sb-item.active{background:rgba(232,112,64,0.18)}
+.sb-item:not(.active):hover{background:rgba(255,255,255,0.05)}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex:none}
+.sb-label{flex:1;font-size:12px;color:rgba(255,255,255,0.7)}
+.sb-item.active .sb-label{color:#FEFEFE;font-weight:500}
+.sb-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35)}
+.sb-item.active .sb-num{color:var(--sidebar-accent)}
+
+.sb-foot{
+  padding:18px 18px;
+  border-top:1px solid var(--sidebar-border);
+}
+.sb-foot-label{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:5px}
+.sb-foot-amount{font-family:'Spectral',serif;font-size:28px;font-weight:300;color:var(--sidebar-accent);letter-spacing:-0.02em;line-height:1}
+.sb-foot-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px}
+
+/* MAIN */
+main{flex:1;overflow-y:auto;background:var(--cream)}
+
+/* HERO — plein écran expressif */
+.hero{
+  padding:40px 52px 0;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:32px;
+}
+.hero-text{padding-bottom:36px}
+.hero-eyebrow{
+  font-size:9px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:700;margin-bottom:14px;
+}
+.hero-title{
+  font-family:'Spectral',serif;
+  font-size:52px;font-weight:200;letter-spacing:-0.03em;line-height:0.95;
+  color:var(--ink);
+}
+.hero-title em{
+  font-style:italic;font-weight:300;
+  color:var(--orange);
+}
+.hero-amount{
+  margin-top:22px;
+  display:flex;align-items:baseline;gap:8px;
+}
+.hero-amount input{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:20px;font-weight:500;
+  background:transparent;border:none;border-bottom:2px solid var(--orange);
+  outline:none;color:var(--ink);padding:0 0 3px;width:140px;text-align:right;
+}
+.hero-amount-label{font-size:11px;color:var(--ink-3);font-weight:500}
+
+/* DONUT HERO — grand */
+.hero-donut-wrap{
+  flex:none;
+  position:relative;
+  margin-bottom:-1px;
+}
+.hero-donut-inner{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.hero-pct{font-family:'Spectral',serif;font-size:32px;font-weight:300;color:var(--orange);letter-spacing:-0.03em;line-height:1}
+.hero-lbl{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin-top:5px;font-weight:700;text-align:center;line-height:1.5}
+
+/* BODY */
+.body{padding:36px 52px}
+
+/* 2-col layout */
+.two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:32px;margin-bottom:32px;align-items:start}
+
+/* LÉGENDE */
+.legend-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;
+}
+.legend-box-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-2);font-weight:700;
+}
+.leg-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 18px;border-bottom:1px solid var(--border);
+}
+.leg-row:last-child{border-bottom:none}
+.leg-bar{width:3px;height:36px;border-radius:2px;flex:none}
+.leg-info{flex:1}
+.leg-name{font-size:12.5px;color:var(--ink);font-weight:400}
+.leg-mgr{font-size:10px;color:var(--ink-3);margin-top:1px}
+.leg-vals{text-align:right}
+.leg-pct{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--ink)}
+.leg-rd{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--orange);margin-top:2px}
+
+/* SLIDERS */
+.sliders-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;
+}
+.sliders-box-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sliders-box-title{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-2);font-weight:700}
+.eq-btn{
+  font-size:10px;font-weight:600;color:var(--orange);
+  border:1.5px solid var(--orange);border-radius:4px;
+  padding:4px 10px;cursor:pointer;letter-spacing:0.04em;
+}
+.sl{padding:11px 18px;border-bottom:1px solid var(--border)}
+.sl:last-child{border-bottom:none}
+.sl-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.sl-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.sl-name{flex:1;font-size:12px;color:var(--ink)}
+.sl-rendement{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-3)}
+.sl-pct{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);min-width:50px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;border-radius:1px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--orange);border:2.5px solid var(--surface);cursor:pointer}
+
+/* TOTAL TAG */
+.total-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+  background:#E8F5E8;color:#1F6B1F;
+  margin-bottom:20px;
+}
+
+/* MÉTRIQUES */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.metric{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:16px 14px;
+}
+.metric-lbl{font-size:8.5px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:7px;line-height:1.4}
+.metric-val{font-family:'Spectral',serif;font-size:24px;font-weight:400;letter-spacing:-0.02em;color:var(--ink);line-height:1}
+.metric-sub{font-size:9.5px;color:var(--ink-3);margin-top:5px}
+.metric.accent{background:var(--orange);border-color:var(--orange)}
+.metric.accent .metric-lbl{color:rgba(255,255,255,0.65)}
+.metric.accent .metric-val{color:#fff}
+.metric.accent .metric-sub{color:rgba(255,255,255,0.6)}
+
+/* INCOME */
+.income-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.inc{border-radius:8px;padding:22px 24px}
+.inc.main{background:var(--sidebar-bg)}
+.inc.secondary{background:var(--surface);border:1px solid var(--border)}
+.inc-eyebrow{font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+.inc.main .inc-eyebrow{color:rgba(255,255,255,0.4)}
+.inc.secondary .inc-eyebrow{color:var(--ink-3)}
+.inc-amount{font-family:'Spectral',serif;font-size:46px;font-weight:200;letter-spacing:-0.04em;line-height:1}
+.inc.main .inc-amount{color:var(--sidebar-accent)}
+.inc.secondary .inc-amount{color:var(--ink)}
+.inc-unit{font-family:'Spectral',serif;font-size:26px;font-weight:300}
+.inc-note{font-size:11px;margin-top:7px}
+.inc.main .inc-note{color:rgba(255,255,255,0.35)}
+.inc.secondary .inc-note{color:var(--ink-3)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR SOMBRE -->
+<aside class="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo-ring">
+      <svg width="40" height="40" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(232,112,64,0.2)" stroke-width="2"/>
+        <circle cx="20" cy="20" r="16" fill="none" stroke="#E87040" stroke-width="2" stroke-dasharray="40 60" stroke-dashoffset="0" transform="rotate(-90 20 20)"/>
+        <circle cx="20" cy="20" r="16" fill="none" stroke="#E87040" stroke-width="2" stroke-dasharray="25 75" stroke-dashoffset="-40" opacity="0.5" transform="rotate(-90 20 20)"/>
+      </svg>
+    </div>
+    <div class="sb-title">Allocation<br><strong>SCPI</strong></div>
+    <div class="sb-date">Données 2025 · Exercice</div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section">Portefeuille</div>
+    <div class="sb-item active">
+      <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#E87040" stroke-width="1.3" stroke-dasharray="6 3"/></svg>
+      <span class="sb-label">Synthèse</span>
+      <span class="sb-num">100 %</span>
+    </div>
+
+    <div class="sb-section">Fonds SCPI</div>
+    <div class="sb-item">
+      <span class="sb-dot" style="background:#2f6fed"></span>
+      <span class="sb-label">Alta Convictions</span>
+      <span class="sb-num">20 %</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-dot" style="background:#1f9e8f"></span>
+      <span class="sb-label">ActivImmo</span>
+      <span class="sb-num">13,33 %</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-dot" style="background:#6f8fd0"></span>
+      <span class="sb-label">Cœur de Régions</span>
+      <span class="sb-num">20 %</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-dot" style="background:#c79a2a"></span>
+      <span class="sb-label">Cristal Life</span>
+      <span class="sb-num">13,33 %</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-dot" style="background:#8c6fb3"></span>
+      <span class="sb-label">Cristal Rente</span>
+      <span class="sb-num">13,33 %</span>
+    </div>
+    <div class="sb-item">
+      <span class="sb-dot" style="background:#cf6a47"></span>
+      <span class="sb-label">Sofidynamic</span>
+      <span class="sb-num">20 %</span>
+    </div>
+  </nav>
+
+  <div class="sb-foot">
+    <div class="sb-foot-label">Revenu mensuel</div>
+    <div class="sb-foot-amount">552 €</div>
+    <div class="sb-foot-sub">pour 100 000 € investis</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Visualiseur d'allocation · Synthèse générale</div>
+      <div class="hero-title">
+        Votre<br>allocation<br><em>immobilière</em>
+      </div>
+      <div class="hero-amount">
+        <span class="hero-amount-label">Capital :</span>
+        <input type="text" value="100 000">
+        <span class="hero-amount-label">€</span>
+      </div>
+    </div>
+
+    <div class="hero-donut-wrap">
+      <svg width="300" height="280" viewBox="0 0 100 93.3">
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="rgba(15,14,11,0.06)" stroke-width="10"/>
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="#2f6fed" stroke-width="10" stroke-dasharray="27.65 110.6" stroke-dashoffset="0" transform="rotate(-90 50 46.7)"/>
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="#1f9e8f" stroke-width="10" stroke-dasharray="18.43 119.82" stroke-dashoffset="-27.65" transform="rotate(-90 50 46.7)"/>
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="#6f8fd0" stroke-width="10" stroke-dasharray="27.65 110.6" stroke-dashoffset="-46.08" transform="rotate(-90 50 46.7)"/>
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="#c79a2a" stroke-width="10" stroke-dasharray="18.43 119.82" stroke-dashoffset="-73.73" transform="rotate(-90 50 46.7)"/>
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="#8c6fb3" stroke-width="10" stroke-dasharray="18.43 119.82" stroke-dashoffset="-92.16" transform="rotate(-90 50 46.7)"/>
+        <circle cx="50" cy="46.7" r="22" fill="none" stroke="#cf6a47" stroke-width="10" stroke-dasharray="27.65 110.6" stroke-dashoffset="-110.59" transform="rotate(-90 50 46.7)"/>
+        <circle cx="50" cy="46.7" r="16" fill="#F5F4F0"/>
+      </svg>
+      <div class="hero-donut-inner">
+        <div class="hero-pct">6,63 %</div>
+        <div class="hero-lbl">Rendement<br>moyen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- 2-COL -->
+    <div class="two-col">
+
+      <!-- LÉGENDE -->
+      <div class="legend-box">
+        <div class="legend-box-head">Répartition du portefeuille</div>
+        <div class="leg-row">
+          <div class="leg-bar" style="background:#2f6fed"></div>
+          <div class="leg-info"><div class="leg-name">Alta Convictions</div><div class="leg-mgr">Altarea IM</div></div>
+          <div class="leg-vals"><div class="leg-pct">20 %</div><div class="leg-rd">6,57 %</div></div>
+        </div>
+        <div class="leg-row">
+          <div class="leg-bar" style="background:#1f9e8f"></div>
+          <div class="leg-info"><div class="leg-name">ActivImmo</div><div class="leg-mgr">Alderan</div></div>
+          <div class="leg-vals"><div class="leg-pct">13,33 %</div><div class="leg-rd">5,49 %</div></div>
+        </div>
+        <div class="leg-row">
+          <div class="leg-bar" style="background:#6f8fd0"></div>
+          <div class="leg-info"><div class="leg-name">Cœur de Régions</div><div class="leg-mgr">Sogenial</div></div>
+          <div class="leg-vals"><div class="leg-pct">20 %</div><div class="leg-rd">6,20 %</div></div>
+        </div>
+        <div class="leg-row">
+          <div class="leg-bar" style="background:#c79a2a"></div>
+          <div class="leg-info"><div class="leg-name">Cristal Life</div><div class="leg-mgr">Inter Gestion REIM</div></div>
+          <div class="leg-vals"><div class="leg-pct">13,33 %</div><div class="leg-rd">6,54 %</div></div>
+        </div>
+        <div class="leg-row">
+          <div class="leg-bar" style="background:#8c6fb3"></div>
+          <div class="leg-info"><div class="leg-name">Cristal Rente</div><div class="leg-mgr">Inter Gestion REIM</div></div>
+          <div class="leg-vals"><div class="leg-pct">13,33 %</div><div class="leg-rd">5,00 %</div></div>
+        </div>
+        <div class="leg-row">
+          <div class="leg-bar" style="background:#cf6a47"></div>
+          <div class="leg-info"><div class="leg-name">Sofidynamic</div><div class="leg-mgr">Sofidy</div></div>
+          <div class="leg-vals"><div class="leg-pct">20 %</div><div class="leg-rd">9,04 %</div></div>
+        </div>
+      </div>
+
+      <!-- SLIDERS -->
+      <div>
+        <div class="total-tag">
+          <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,7 5,10 10,3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Total : 100 %
+        </div>
+
+        <div class="sliders-box">
+          <div class="sliders-box-head">
+            <span class="sliders-box-title">Pondération par SCPI</span>
+            <span class="eq-btn">Égaliser</span>
+          </div>
+          <div class="sl">
+            <div class="sl-top">
+              <span class="sl-dot" style="background:#2f6fed"></span>
+              <span class="sl-name">Alta Convictions</span>
+              <span class="sl-rendement">6,57 %</span>
+              <span class="sl-pct">20 %</span>
+            </div>
+            <input type="range" min="0" max="60" value="20" style="background:linear-gradient(90deg,#2f6fed 33%,#E0DDD6 33%)">
+          </div>
+          <div class="sl">
+            <div class="sl-top">
+              <span class="sl-dot" style="background:#1f9e8f"></span>
+              <span class="sl-name">ActivImmo</span>
+              <span class="sl-rendement">5,49 %</span>
+              <span class="sl-pct">13,33 %</span>
+            </div>
+            <input type="range" min="0" max="60" value="13" style="background:linear-gradient(90deg,#1f9e8f 22%,#E0DDD6 22%)">
+          </div>
+          <div class="sl">
+            <div class="sl-top">
+              <span class="sl-dot" style="background:#6f8fd0"></span>
+              <span class="sl-name">Cœur de Régions</span>
+              <span class="sl-rendement">6,20 %</span>
+              <span class="sl-pct">20 %</span>
+            </div>
+            <input type="range" min="0" max="60" value="20" style="background:linear-gradient(90deg,#6f8fd0 33%,#E0DDD6 33%)">
+          </div>
+          <div class="sl">
+            <div class="sl-top">
+              <span class="sl-dot" style="background:#c79a2a"></span>
+              <span class="sl-name">Cristal Life</span>
+              <span class="sl-rendement">6,54 %</span>
+              <span class="sl-pct">13,33 %</span>
+            </div>
+            <input type="range" min="0" max="60" value="13" style="background:linear-gradient(90deg,#c79a2a 22%,#E0DDD6 22%)">
+          </div>
+          <div class="sl">
+            <div class="sl-top">
+              <span class="sl-dot" style="background:#8c6fb3"></span>
+              <span class="sl-name">Cristal Rente</span>
+              <span class="sl-rendement">5,00 %</span>
+              <span class="sl-pct">13,33 %</span>
+            </div>
+            <input type="range" min="0" max="60" value="13" style="background:linear-gradient(90deg,#8c6fb3 22%,#E0DDD6 22%)">
+          </div>
+          <div class="sl">
+            <div class="sl-top">
+              <span class="sl-dot" style="background:#cf6a47"></span>
+              <span class="sl-name">Sofidynamic</span>
+              <span class="sl-rendement">9,04 %</span>
+              <span class="sl-pct">20 %</span>
+            </div>
+            <input type="range" min="0" max="60" value="20" style="background:linear-gradient(90deg,#cf6a47 33%,#E0DDD6 33%)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTRIQUES -->
+    <div class="metrics">
+      <div class="metric accent">
+        <div class="metric-lbl">Rendement moyen</div>
+        <div class="metric-val">6,63 %</div>
+        <div class="metric-sub">taux pondéré</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Performance (PGA)</div>
+        <div class="metric-val">7,96 %</div>
+        <div class="metric-sub">+ revalorisation</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Taux d'occupation</div>
+        <div class="metric-val" style="color:#1A6B1A">96,9 %</div>
+        <div class="metric-sub">solidité locative</div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl">Décote d'acquisition</div>
+        <div class="metric-val" style="color:#1A6B1A">-5,17 %</div>
+        <div class="metric-sub">vs valeur reconstitution</div>
+      </div>
+    </div>
+
+    <!-- INCOME -->
+    <div class="income-row">
+      <div class="inc main">
+        <div class="inc-eyebrow">Revenu annuel estimé</div>
+        <div class="inc-amount">6 630 <span class="inc-unit">€</span></div>
+        <div class="inc-note">pour 100 000 € investis · rendement 6,63 %</div>
+      </div>
+      <div class="inc secondary">
+        <div class="inc-eyebrow">Revenu mensuel estimé</div>
+        <div class="inc-amount">552 <span class="inc-unit">€</span></div>
+        <div class="inc-note">moyenne mensuelle lissée · brut avant fiscalité</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>
