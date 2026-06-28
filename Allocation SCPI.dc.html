@@ -103,7 +103,6 @@
     .legacy-print-empty{display:none!important;margin:0!important;padding:0!important;}
     /* Éviter les coupures à l'intérieur des blocs */
     .kpi-card{break-inside:avoid;}
-    .alloc-grid > div{break-inside:avoid;}
     .bottom-grid{break-inside:avoid;}
     .bottom-grid > div{break-inside:avoid;}
     .kpi-grid{break-inside:avoid;}
@@ -123,8 +122,15 @@
     input.main-amount-input{font-size:30px!important;}
     /* Sliders masqués (non rendus par les navigateurs en mode impression) */
     input[type="range"]{display:none!important;}
-    /* Grilles : maintenir le layout desktop sur A4 (annule les règles mobile éventuelles) */
-    .alloc-grid{grid-template-columns:1.2fr 1fr!important;}
+    /* PDF synthèse : Pondération seule en page 1, Répartition+KPI en page 2 */
+    .alloc-grid{grid-template-columns:1fr!important;}
+    .alloc-ponder{break-after:page;}
+    /* Multi-société : page 3, masqué si 1 seule société */
+    .co-table-section{break-before:page;}
+    .print-hidden{display:none!important;}
+    /* Patrimoine historique : nouvelle page si données présentes */
+    .legacy-section-print{break-before:page;}
+    /* Grilles : layout desktop sur A4 (annule les règles mobile éventuelles) */
     .bottom-grid{grid-template-columns:1fr 1fr 1fr!important;}
     .kpi-grid{grid-template-columns:repeat(5,1fr)!important;}
     .detail-geo-grid{grid-template-columns:1fr 1fr!important;}
@@ -187,6 +193,10 @@
     input[type="text"],input[type="number"]{font-size:16px!important;}
     /* Montant à investir : conserve sa grande taille (30px > 16px, pas de zoom) */
     input.main-amount-input{font-size:30px!important;}
+    /* Pondération : masque le taux de rendement pour libérer l'espace sur chaque ligne */
+    .scpi-rendement{display:none!important;}
+    /* Vignettes alloc-grid : empêche le contenu de dépasser la largeur de l'écran */
+    .alloc-grid > div{min-width:0;overflow-x:hidden;}
     /* Donut : taille fluide (évite le débordement dans la card) */
     .donut-wrap{width:min(280px,calc(100% - 4px))!important;height:min(280px,calc(100% - 4px))!important;}
     .donut-wrap svg{width:100%!important;height:100%!important;}
@@ -330,7 +340,7 @@
           <div class="alloc-grid" style="display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:start;margin-bottom:22px;">
 
             <!-- Sliders -->
-            <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);">
+            <div class="alloc-ponder" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
                 <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0;">Pondération</h2>
                 <div style="display:flex;gap:8px;" class="no-print">
@@ -344,7 +354,7 @@
                   <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
                     <span style="width:9px;height:9px;border-radius:50%;flex:none;background:{{ row.color }};"></span>
                     <span style="flex:1;font-size:13.5px;font-weight:500;cursor:pointer;" onClick="{{ row.onSelect }}">{{ row.name }}</span>
-                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;">{{ row.rendementStr }}</span>
+                    <span class="scpi-rendement" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;">{{ row.rendementStr }}</span>
                     <!-- Pourcentage éditable -->
                     <span style="display:inline-flex;align-items:center;">
                       <input type="text" value="{{ row.weightInput }}" onFocus="{{ row.onPctFocus }}" onInput="{{ row.onWeightInput }}" onBlur="{{ row.onPctBlur }}" onKeyDown="{{ row.onPctKeyDown }}" style="width:38px;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--ink);border:none;background:transparent;outline:none;text-align:right;padding:0;font-variant-numeric:tabular-nums;" />
@@ -592,7 +602,7 @@
           </div>
 
           <!-- Répartition multi-sociétés -->
-          <div style="margin-top:28px;">
+          <div class="co-table-section {{ coSectionPrintClass }}" style="margin-top:28px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
               <div>
                 <h2 style="font-family:'Spectral',serif;font-size:20px;font-weight:500;margin:0 0 4px;">Répartition multi-sociétés</h2>
@@ -1652,7 +1662,8 @@ class Component extends DCLogic {
       legacyTotalStr:    this.fmtEur(legacyTotal),
       grandTotalStr:     this.fmtEur(grandTotal),
       consolidatedNewPct,
-      legacyPrintClass:  st.legacy.length === 0 ? 'legacy-print-empty' : '',
+      legacyPrintClass:  st.legacy.length === 0 ? 'legacy-print-empty' : 'legacy-section-print',
+      coSectionPrintClass: st.companies.length <= 1 ? 'print-hidden' : '',
       hasLegacy:         st.legacy.length > 0,
       companyRows, companyTotalStr, companyTotalOk, companyTotalColor,
       companyRevenuTotalStr: this.fmtEur(Math.round(incomeAnnual)),
