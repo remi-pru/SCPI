@@ -1094,8 +1094,8 @@ class Component extends DCLogic {
       for (const s of visibleScpi) {
         const tgt = normFn(s.id);
         b[s.id] = {
-          min: Math.max(0, Math.ceil(amount * Math.max(0, tgt - 0.02) / s.prix - 1e-9)),
-          max: Math.floor(amount * (tgt + 0.02) / s.prix + 1e-9),
+          min: Math.max(0, Math.ceil(amount * Math.max(0, tgt - 0.05) / s.prix - 1e-9)),
+          max: Math.floor(amount * (tgt + 0.05) / s.prix + 1e-9),
         };
       }
       return b;
@@ -1199,6 +1199,17 @@ class Component extends DCLogic {
     const newWeights = Object.assign({}, w);
     for (const s of visibleScpi)
       newWeights[s.id] = tc > 0 ? Math.round((best.p[s.id] || 0) * s.prix / tc * 10000) / 100 : w[s.id];
+
+    // Vérification : annuler si le montant non investi après optimisation n'est pas inférieur au montant initial
+    // (même formule que l'UI : floor des parts depuis les poids normalisés)
+    const computeUnalloc = (weights) => {
+      const wTotal = visibleScpi.reduce((a, s) => a + (weights[s.id] || 0), 0);
+      if (wTotal <= 0) return amount;
+      return Math.max(0, amount - visibleScpi.reduce((sum, s) =>
+        sum + Math.floor(amount * (weights[s.id] || 0) / wTotal / s.prix) * s.prix, 0));
+    };
+    if (computeUnalloc(newWeights) >= computeUnalloc(w)) return;
+
     this.setState({ weights: newWeights });
   };
   addLegacy    = () => this.setState(s=>({legacy:[...s.legacy,{name:'',manager:'',amount:''}]}));
