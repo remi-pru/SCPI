@@ -767,22 +767,26 @@
                 <div style="margin-top:16px;border-top:1px solid var(--line-2);padding-top:14px;">
                   <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;">Résultat net par société</div>
                   <div style="overflow-x:auto;">
-                  <div style="display:grid;grid-template-columns:1fr repeat(4,auto);gap:0 16px;padding:0 0 6px 0;border-bottom:1px solid var(--line-2);margin-bottom:2px;min-width:420px;">
-                    <span style="font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Société</span>
-                    <span style="font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Revenu brut</span>
-                    <span style="font-size:10.5px;color:var(--neg);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">IS</span>
-                    <span style="font-size:10.5px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Net après impôt</span>
-                    <span style="font-size:10.5px;color:var(--pos);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;">Rend. net</span>
-                  </div>
-                  <sc-for list="{{ fscCompaniesRows }}" as="cRow">
-                    <div style="display:grid;grid-template-columns:1fr repeat(4,auto);gap:0 16px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2);min-width:420px;">
-                      <span style="font-size:13px;color:var(--ink);font-weight:500;">{{ cRow.name }}</span>
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-2);text-align:right;">{{ cRow.revStr }}</span>
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--neg);text-align:right;">{{ cRow.isStr }}</span>
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--pos);text-align:right;">{{ cRow.netStr }}</span>
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--pos);text-align:right;">{{ cRow.rendStr }}</span>
+                  <div style="display:table;width:100%;min-width:420px;border-collapse:collapse;">
+                    <!-- En-tête -->
+                    <div style="display:table-row;border-bottom:1px solid var(--line-2);">
+                      <span style="display:table-cell;font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:0 16px 8px 0;">Société</span>
+                      <span style="display:table-cell;font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;padding:0 16px 8px 0;">Revenu brut</span>
+                      <span style="display:table-cell;font-size:10.5px;color:var(--neg);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;padding:0 16px 8px 0;">IS</span>
+                      <span style="display:table-cell;font-size:10.5px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;padding:0 16px 8px 0;">Net après impôt</span>
+                      <span style="display:table-cell;font-size:10.5px;color:var(--pos);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right;padding:0 0 8px 0;">Rend. net</span>
                     </div>
-                  </sc-for>
+                    <!-- Lignes données -->
+                    <sc-for list="{{ fscCompaniesRows }}" as="cRow">
+                      <div style="display:table-row;border-bottom:1px solid var(--line-2);">
+                        <span style="display:table-cell;font-size:13px;color:var(--ink);font-weight:500;padding:7px 16px 7px 0;">{{ cRow.name }}</span>
+                        <span style="display:table-cell;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-2);text-align:right;padding:7px 16px 7px 0;">{{ cRow.revStr }}</span>
+                        <span style="display:table-cell;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--neg);text-align:right;padding:7px 16px 7px 0;">{{ cRow.isStr }}</span>
+                        <span style="display:table-cell;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--pos);text-align:right;padding:7px 16px 7px 0;">{{ cRow.netStr }}</span>
+                        <span style="display:table-cell;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--pos);text-align:right;padding:7px 0 7px 0;">{{ cRow.rendStr }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
                   </div>
                 </div>
               </sc-if>
@@ -1066,7 +1070,7 @@ class Component extends DCLogic {
     showHiddenPanel: false,
     legacy: [],
     companies: [{name:'Société 1', pct:100}],
-    fiscalite: {mode:'propre', tmi:30, regime:'reel', apport:'cca'}
+    fiscalite: {mode:'is', tmi:30, regime:'reel', apport:'cca'}
   };
 
   // ── Buffer d'édition (non-réactif - hors state) ───────────────────────────
