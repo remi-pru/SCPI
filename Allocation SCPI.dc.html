@@ -1000,7 +1000,30 @@ class Component extends DCLogic {
     visible.forEach((s,i) => w[s.id] = base + (i < rem ? 1 : 0));
     this.setState({weights:w});
   };
-  reset         = () => this.setState({weights:{...DEFAULT_WEIGHTS}});
+  reset = () => {
+    const st     = this.state;
+    const amount = st.amount == null ? (this.props.defaultAmount ?? 100000) : st.amount;
+    if (!amount) { this.setState({weights:{...DEFAULT_WEIGHTS}}); return; }
+    const defTotal = Object.values(DEFAULT_WEIGHTS).reduce((s,v) => s+v, 0) || 100;
+    const defNorm  = id => (DEFAULT_WEIGHTS[id] || 0) / defTotal;
+    // Calcul des parts entières pour chaque SCPI
+    const parts = {};
+    let tc = 0;
+    for (const s of SCPI) {
+      if (!s.prix) { parts[s.id] = 0; continue; }
+      const n = Math.floor(amount * defNorm(s.id) / s.prix);
+      parts[s.id] = n;
+      tc += n * s.prix;
+    }
+    // Poids en % de l'investi réel (même format que l'optimiseur, sum ~= 100)
+    const w = {};
+    for (const s of SCPI) {
+      w[s.id] = tc > 0 && s.prix
+        ? Math.round(parts[s.id] * s.prix / tc * 10000) / 100
+        : (DEFAULT_WEIGHTS[s.id] || 0);
+    }
+    this.setState({weights: w});
+  };
   togglePessimistic  = () => this.setState(s=>({pessimistic:!s.pessimistic}));
   exportPdf          = () => window.print();
   openSidebar        = () => this.setState({sidebarOpen:true});
